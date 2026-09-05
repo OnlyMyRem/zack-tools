@@ -636,6 +636,49 @@ input.landed {
   grid-template-columns: auto auto minmax(0, 1fr);
 }
 
+/* 分钟级组四个下拉框（年 / 月 / 时 / 分）并排一行，各自等宽；
+   rail 窄，紧凑字体保证不溢出。 */
+.bg-pick.cols-4 {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+/* 粒度按钮：切换「分」列的步进，标题下一排并排，选中那档高亮。 */
+.bg-gran {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 4px 0 10px;
+  padding: 6px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.bg-gran .gran {
+  flex: 1;
+  padding: 5px 0;
+  font-size: 0.74rem;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  white-space: nowrap;
+  text-align: center;
+  transition: color 0.15s ease, background 0.15s ease;
+}
+
+.bg-gran .gran:hover {
+  color: var(--accent);
+  background: var(--accent-dim);
+}
+
+.bg-gran .gran.active {
+  color: var(--accent-2);
+  background: var(--accent-dim);
+  font-weight: 600;
+}
+
 /* 基准栏的下拉框去掉共用样式画的倒三角——点开原生列表本身就能选，
    右侧改成一列上下三角，点一下就在这列选项里上移 / 下移一项。 */
 .bg-pick select {

@@ -445,25 +445,35 @@
     return { year: y, month: mo, day: d, hour: h, minute: mi, second: 0 };
   }
 
+  // 「分」列按所选粒度重建选项；save 值会随粒度取整，保证始终命中某个合法分钟。
+  function minuteOptions(step) {
+    return range(0, 59, step).map(function (m) { return { v: m, t: U.pad(m) + " 分" }; });
+  }
+
   var BASE_GROUPS = [
     {
       key: "day",
-      title: "日",
-      sub: "今天 · 时:分",
+      title: "典型分钟级",
+      // 粒度按钮：切换底下「分」列的步进。
+      granular: [
+        { step: 1, t: "1 分钟", def: false },
+        { step: 5, t: "5 分钟", def: true },
+        { step: 15, t: "15 分钟", def: false },
+      ],
       cols: [
+        { label: "年份", options: range(1970, 2050).map(function (y) { return { v: y, t: String(y) }; }) },
+        { label: "月份", options: range(1, 12).map(function (mo) { return { v: mo, t: mo + " 月" }; }) },
         { label: "时", options: range(0, 23).map(function (h) { return { v: h, t: U.pad(h) + " 时" }; }) },
-        { label: "分", options: range(0, 55, 5).map(function (m) { return { v: m, t: U.pad(m) + " 分" }; }) },
+        { label: "分", step: 5, options: minuteOptions(5) },
       ],
       resolve: function (now, v) {
-        var p = T.zonedParts(now, tz);
-        var want = wantParts(p.year, p.month, p.day, v[0], v[1]);
-        return { instant: T.zonedToInstant(want.year, want.month, want.day, v[0], v[1], 0, tz), want: want };
+        var want = wantParts(v[0], v[1], 1, v[2], v[3]);
+        return { instant: T.zonedToInstant(v[0], v[1], 1, v[2], v[3], 0, tz), want: want };
       },
     },
     {
       key: "ym",
-      title: "年月",
-      sub: "年 → 月 → 日",
+      title: "典型日",
       cols: [
         { label: "年份", options: range(1970, 2050).map(function (y) { return { v: y, t: String(y) }; }) },
         { label: "月份", options: range(1, 12).map(function (mo) { return { v: mo, t: mo + " 月" }; }) },
@@ -543,11 +553,18 @@
     }
     return (
       '<section class="bg" data-g="' + g.key + '">' +
-        '<div class="bg-head"><h3>' + g.title + "<small>" + g.sub + "</small></h3>" +
+        '<div class="bg-head"><h3>' + g.title + "</h3>" +
           '<span class="bg-head-r">' +
             '<span class="bg-tag auto" data-role="tag">自动 · 最近</span>' +
             '<button class="bg-recent" type="button" data-role="recent" disabled>回到最近</button>' +
           "</span></div>" +
+        (g.granular && g.granular.length
+          ? '<div class="bg-gran" data-role="gran">' +
+            g.granular.map(function (gr) {
+              return '<button type="button" class="gran" data-step="' + gr.step + '"' + (gr.def ? " aria-pressed=\"true\"" : ' aria-pressed="false"') + ">" + gr.t + "</button>";
+            }).join("") +
+            "</div>"
+          : "") +
         '<div class="bg-pick cols-' + g.cols.length + '">' + g.cols.map(selectHtml).join("") + "</div>" +
         '<div class="bg-out">' +
           '<div class="bg-secrow"><b class="bg-sec" data-role="sec">—</b>' +
@@ -572,8 +589,45 @@
       st.selects = Array.prototype.slice.call(card.querySelectorAll(".bg-pick select"));
       st.steps = Array.prototype.slice.call(card.querySelectorAll(".step"));
       st.recentBtn = card.querySelector('[data-role="recent"]');
+      st.gran = Array.prototype.slice.call(card.querySelectorAll(".gran"));
       rail[g.key] = st;
     });
+
+    // 粒度按钮的按下态跟随当前选中：初次进页面时为默认档。
+    BASE_GROUPS.forEach(function (g) {
+      if (!g.granular || !g.granular.length) return;
+      paintGranular(rail[g.key]);
+    });
+  }
+
+  // 根据当前「分」列的实际步进，把对应粒度按钮标成已选。
+  function paintGranular(st) {
+    if (!st.gran.length) return;
+    var col = st.group.cols[st.group.cols.length - 1];
+    var step = col.step || 5;
+    st.gran.forEach(function (b) {
+      var on = Number(b.dataset.step) === step;
+      b.classList.toggle("active", on);
+      b.setAttribute("aria-pressed", on ? "true" : "false");
+    });
+  }
+
+  // 切换粒度：重建「分」列的选项，并把当前选中分钟对齐到新粒度，保持语义不失真。
+  function setGranular(st, step) {
+    var col = st.group.cols[st.group.cols.length - 1];
+    if (col.step === step) return;
+    var sel = st.selects[st.selects.length - 1];
+    var cur = Number(sel.value) || 0;
+    col.step = step;
+    col.options = minuteOptions(step);
+    // 重绘该 select 的选项，保留当前分钟（按新粒度向下取整，避免落到非法分钟）。
+    sel.innerHTML = col.options.map(function (o) {
+      return '<option value="' + o.v + '">' + o.t + "</option>";
+    }).join("");
+    sel.value = String(Math.floor(cur / step) * step);
+    st.touched = true;
+    paintGranular(st);
+    renderBases(Date.now());
   }
 
   function readPick(st) {
@@ -652,6 +706,12 @@
       var card = e.target.closest(".bg");
       if (!card) return;
       var st = rail[card.dataset.g];
+
+      var gran = e.target.closest(".gran");
+      if (gran) {
+        setGranular(st, Number(gran.dataset.step));
+        return;
+      }
 
       var step = e.target.closest(".step");
       if (step) {
