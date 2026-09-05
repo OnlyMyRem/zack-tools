@@ -9,6 +9,12 @@
   --control-h: 42px;
 }
 
+/* 本页内容按「一屏放下」排版：压掉 body 的底部留白，页面总高不超过基准栏自然高度，
+   不出滚动条，sticky 基准栏也就永远不会和左栏错位。 */
+body {
+  padding-bottom: 10px;
+}
+
 /* 左栏的第一块面板：目标时区 + 当前时间戳合并成一条顶部信息带，
    列间距由 .ts-cols 负责，这里不再叠一层 margin。 */
 .top-panel {
@@ -142,44 +148,61 @@
   display: none;
 }
 
-/* 两张实时卡片并排，数值用等宽 + 表格数字，跳动时列宽不抖。 */
-.stat-card {
+/* 顶部两个实时时间戳：从两块独立大卡片压成一条信息带里的两格。
+   共用 .stat-card 保留结构，但在这里退掉边框与底色、收紧数值字号，
+   两格之间只留一条虚线分隔——不再各占一块带边框的大块头。 */
+.top-panel .stat-card {
   position: relative;
+  gap: 4px;
+  padding: 5px 18px 7px 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
 }
 
-.stat-card b {
+.top-panel .stat-card:first-child {
+  padding-right: 20px;
+  border-right: 1px dashed var(--border);
+}
+
+.top-panel .stat-card b {
   font-variant-numeric: tabular-nums;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.4px;
+  font-size: 1.45rem;
+  font-weight: 600;
+  line-height: 1.2;
   word-break: break-all;
 }
 
-.stat-card b.tight {
-  font-size: 1.06rem;
+.top-panel .stat-card b.tight {
+  font-size: 1.2rem;
   letter-spacing: 0;
 }
 
-.stat-card .copy {
-  position: absolute;
-  top: 12px;
-  right: 12px;
-  background: transparent;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  color: var(--muted);
-  padding: 3px 10px;
+.top-panel .stat-card span {
   font-size: 0.7rem;
+}
+
+/* 复制做成右上角的安静文字链接，不再占用一个带边框的方块。 */
+.top-panel .stat-card .copy {
+  position: absolute;
+  top: 0;
+  right: 0;
+  background: none;
+  border: 0;
+  border-radius: 0;
+  color: var(--muted);
+  padding: 0;
+  font-size: 0.66rem;
   cursor: pointer;
-  transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
+  transition: color 0.15s ease;
 }
 
-.stat-card .copy:hover {
-  border-color: var(--accent);
+.top-panel .stat-card .copy:hover {
   color: var(--accent);
-  background: var(--accent-dim);
 }
 
-.stat-card .copy.ok {
-  border-color: var(--success);
+.top-panel .stat-card .copy.ok {
   color: var(--success);
 }
 
@@ -187,7 +210,7 @@
    「填入下方」的快捷按钮并到同一行右侧，纵向少占一整行。 */
 .now-head {
   margin-top: 14px;
-  padding-top: 12px;
+  padding-top: 14px;
   border-top: 1px dashed var(--border);
 }
 
@@ -242,7 +265,11 @@ input.landed {
 }
 
 .top-panel .grid {
-  margin-top: 12px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px dashed var(--border);
 }
 
 #ts-input,
@@ -316,12 +343,14 @@ input.landed {
 /* ---------- 右侧基准栏 ---------- */
 
 /* 两栏并排的骨架：基准栏整块顶头，与左栏第一块面板顶边齐平，
-   只留常规板块间距（与 cron 页同一套版式）。 */
+   只留常规板块间距（与 cron 页同一套版式）。
+   align-items: stretch 让矮的一栏拉伸到行高——两栏底边由栅格保证对齐，
+   不再需要 JS 量高，缩放 / 改窗口即时生效。 */
 .ts-cols {
   display: grid;
   grid-template-columns: minmax(0, 1fr) var(--rail-w);
   gap: 22px;
-  align-items: start;
+  align-items: stretch;
   margin-top: 0;
 }
 
@@ -329,6 +358,12 @@ input.landed {
   display: flex;
   flex-direction: column;
   min-width: 0;
+}
+
+/* 左栏被基准栏撑高时（缩得很小时会出现），最后一块面板跟着长高，
+   让「面板底边 = 左栏底边 = 典型日卡片底边」始终成立。 */
+.ts-main > :last-child {
+  flex: 1 0 auto;
 }
 
 /* 两块互转并排吃满首屏：放不下两栏就退回一栏。
@@ -342,6 +377,16 @@ input.landed {
 
 .ts-duo > .panel {
   margin-top: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* 左栏被基准栏撑高时，多出的高度不堆在面板底部成一坨空白，
+   而是摊进 panel-body 各行之间的间距里——两块面板结构相同、间距同步增长，
+   星期 / ISO 等共享行仍保持水平对齐。 */
+.ts-duo .panel-body {
+  flex: 1;
+  justify-content: space-between;
 }
 
 /* 输入行分工：文本框吃剩余，单位与原生选择器按内容占宽。 */
@@ -354,9 +399,7 @@ input.landed {
   min-width: 0;
 }
 
-.ts-duo .shift-row {
-  gap: 6px;
-}
+
 
 /* 结果行：标签 + 值 + 复制挤在一行里，值不许折断，所以字号与内边距都收紧一档。
    最长的一条永远是 RFC 2822（定长 31 字符，含 LMT 那种带秒的偏移约 252px），
@@ -395,29 +438,6 @@ input.landed {
 .facts .kv .copy {
   padding: 3px 8px;
   font-size: 0.66rem;
-}
-
-/* 回读校验那行的值是「日期时间 + 时区 ID」两段：日期时间定宽不缩，
-   ID 塞不下时由 JS 打上 .no-zone 整条收掉（省略号咬半截 ID 比不写更难读）。 */
-#wall-echo {
-  display: flex;
-  align-items: baseline;
-  gap: 8px;
-  overflow: hidden;
-}
-
-#wall-echo .dt,
-#wall-echo .tz {
-  flex: none;
-}
-
-#wall-echo .tz {
-  color: var(--muted);
-  font-weight: 400;
-}
-
-#wall-echo.no-zone .tz {
-  display: none;
 }
 
 /* 主结果行「日期时间」与 .facts 各行同规格：同样标签宽、内边距、字号和复制按钮，
@@ -466,6 +486,58 @@ input.landed {
   font-weight: 400;
 }
 
+/* 「日期时间 → 时间戳」主结果行：与 #ts-main-row 同规格，保证两块面板的
+   星期 / ISO / UTC / RFC / 年内第几天 逐行水平对齐。值区是「秒 + 毫秒」两段，
+   各带自己的单位小标和复制按钮。 */
+#wall-main-row {
+  gap: 8px;
+  padding: 7px 10px;
+}
+
+#wall-main-row .kv-label {
+  width: 76px;
+  flex: none;
+  font-size: 0.66rem;
+  letter-spacing: 0.6px;
+  text-align: right;
+}
+
+#wall-main-row .kv-value {
+  display: flex;
+  gap: 14px;
+  font-size: 0.84rem;
+  white-space: nowrap;
+  word-break: normal;
+  overflow: hidden;
+}
+
+#wall-main-row .kv-value .sub {
+  display: flex;
+  align-items: baseline;
+  gap: 5px;
+  min-width: 0;
+}
+
+#wall-main-row .kv-value .sub b {
+  font-weight: inherit;
+  color: inherit;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+#wall-main-row .kv-value .sub .u {
+  flex: none;
+  font-size: 0.66rem;
+  color: var(--muted);
+  font-weight: 400;
+}
+
+#wall-main-row .copy {
+  flex: none;
+  padding: 3px 8px;
+  font-size: 0.66rem;
+}
+
 /* 说明文字为空时不要留下空的段落高度。 */
 .note:empty {
   display: none;
@@ -475,12 +547,14 @@ input.landed {
    主结果行 #ts-main-row 不在 .facts 里，但同样吃这条规则，否则日期时间会被省略号截掉。 */
 @media (max-width: 560px) {
   .facts .kv,
-  #ts-main-row {
+  #ts-main-row,
+  #wall-main-row {
     flex-wrap: wrap;
   }
 
   .facts .kv-label,
-  #ts-main-row .kv-label {
+  #ts-main-row .kv-label,
+  #wall-main-row .kv-label {
     width: 100%;
     text-align: left;
   }
@@ -502,21 +576,18 @@ input.landed {
     text-overflow: clip;
   }
 
-  /* 这一档标签本来就独占一行，回读校验的「日期时间 / 时区 ID」让它俩各自一行，
-     比省掉 ID 更实在，也就不必再走 .no-zone 那条路。 */
-  #wall-echo {
+  /* 这一档标签本来就独占一行，主结果行的「秒 / 毫秒」两段各自换行。 */
+  #wall-main-row {
     flex-wrap: wrap;
   }
 }
 
-/* 基准栏完全固定在视口内（position: fixed），滚到页面底部也不挪动，栏内装不下时自己滚。
-   right 用 % 对齐 .wrap 的右缘：百分比相对固定定位的包含块（可视视口，不含滚动条），
-   与 body 里 .wrap 的居中基准一致，滚动条出现 / 消失都不会错位。 */
+/* 基准栏用 sticky 钉在视口里：滚动时顶在顶栏下方、视觉上纹丝不动；
+   栏高由栅格行高拉伸（与左栏等高），只在视口装不下时按 max-height 封顶、栏内自滚。
+   sticky 元素留在栅格流里，右缘由网格列天然对齐，不再需要 fixed 的百分比凑边。 */
 .ts-rail {
-  position: fixed;
+  position: sticky;
   top: calc(var(--hang-h) + 18px);
-  right: max(16px, calc((100% - var(--content-max)) / 2));
-  width: var(--rail-w);
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -544,16 +615,21 @@ input.landed {
 }
 
 #base-groups {
+  flex: 1 0 auto;
   display: flex;
   flex-direction: column;
   gap: 12px;
 }
 
+/* 卡片只伸不缩：栏高富余时两张卡片均摊多余空间、底边贴住栏底；
+   栏高不足时保持自然高度、由基准栏内部滚动兜底，任何缩放级别都不会被压裁剪。 */
 .bg {
+  flex: 1 0 auto;
   background: var(--panel);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   padding: 14px 14px 12px;
+  min-width: 0;
 }
 
 .bg-head {
@@ -608,6 +684,14 @@ input.landed {
   margin-left: 6px;
 }
 
+/* 卡片内的用法说明：一行小字，紧贴表头；两张卡片都置顶，高度被它们规整对齐。 */
+.bg-desc {
+  margin: -4px 0 10px;
+  font-size: 0.7rem;
+  line-height: 1.5;
+  color: var(--muted);
+}
+
 .bg-tag {
   font-size: 0.68rem;
   letter-spacing: 0.4px;
@@ -640,6 +724,24 @@ input.landed {
    rail 窄，紧凑字体保证不溢出。 */
 .bg-pick.cols-4 {
   grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+/* 分钟级带「日」后共五个下拉框（年 / 月 / 日 / 时 / 分）。
+   rail 横向放不下，拆两行：年、月一行靠左，日、时、分一行占满，左右各自对齐。
+   下行三个都短（日/时/分纯数字），三列正好等宽铺满卡片。 */
+.bg-pick.cols-5 {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.bg-pick.cols-5 .field:nth-child(1),
+.bg-pick.cols-5 .field:nth-child(2) {
+  grid-row: 1;
+}
+
+.bg-pick.cols-5 .field:nth-child(3),
+.bg-pick.cols-5 .field:nth-child(4),
+.bg-pick.cols-5 .field:nth-child(5) {
+  grid-row: 2;
 }
 
 /* 粒度按钮：切换「分」列的步进，标题下一排并排，选中那档高亮。 */
@@ -821,18 +923,6 @@ input.landed {
   line-height: 1.5;
 }
 
-.rail-note {
-  font-size: 0.72rem;
-  line-height: 1.7;
-  color: var(--muted);
-  padding: 0 2px;
-}
-
-.rail-note b {
-  color: var(--accent-2);
-  font-weight: 600;
-}
-
 /* 窄屏放不下并排两栏，基准栏退回正文下方。 */
 @media (max-width: 1120px) {
   .ts-cols {
@@ -842,8 +932,6 @@ input.landed {
 
   .ts-rail {
     position: static;
-    right: auto;
-    width: auto;
     margin-top: 0;
     max-height: none;
     overflow-y: visible;

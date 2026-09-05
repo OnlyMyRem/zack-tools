@@ -91,9 +91,6 @@
               <div class="kv"><span class="kv-label">ISO 8601</span><span class="kv-value" id="ts-iso">—</span><button class="copy" type="button" data-copy="ts-iso">复制</button></div>
               <div class="kv"><span class="kv-label">UTC 时刻</span><span class="kv-value" id="ts-utc">—</span><button class="copy" type="button" data-copy="ts-utc">复制</button></div>
               <div class="kv"><span class="kv-label">RFC 2822</span><span class="kv-value" id="ts-rfc">—</span><button class="copy" type="button" data-copy="ts-rfc">复制</button></div>
-              <div class="kv"><span class="kv-label">毫秒级</span><span class="kv-value" id="ts-ms">—</span><button class="copy" type="button" data-copy="ts-ms">复制</button></div>
-              <div class="kv"><span class="kv-label">秒级</span><span class="kv-value" id="ts-s">—</span><button class="copy" type="button" data-copy="ts-s">复制</button></div>
-              <div class="kv"><span class="kv-label">距今</span><span class="kv-value" id="ts-relative">—</span></div>
               <div class="kv"><span class="kv-label">年内第几天</span><span class="kv-value" id="ts-doy">—</span></div>
             </div>
           </div>
@@ -118,19 +115,20 @@
                 </span>
               </div>
             </div>
-            <div class="row shift-row">
-              <button class="btn sm" type="button" id="wall-now">现在</button>
-              <button class="btn sm" type="button" data-shift="-86400000">-1 天</button>
-              <button class="btn sm" type="button" data-shift="86400000">+1 天</button>
-              <button class="btn sm" type="button" data-shift="-3600000">-1 小时</button>
-              <button class="btn sm" type="button" data-shift="3600000">+1 小时</button>
-            </div>
             <p class="note" id="wall-note"></p>
+            <div class="kv" id="wall-main-row">
+              <span class="kv-label">时间戳</span>
+              <span class="kv-value em" id="wall-split">
+                <span class="sub"><b id="wall-sec">—</b><span class="u">秒</span><button class="copy" type="button" data-copy="wall-sec">复制</button></span>
+                <span class="sub"><b id="wall-ms">—</b><span class="u">毫秒</span><button class="copy" type="button" data-copy="wall-ms">复制</button></span>
+              </span>
+            </div>
             <div class="facts">
-              <div class="kv"><span class="kv-label">秒级 (10)</span><span class="kv-value em" id="wall-sec">—</span><button class="copy" type="button" data-copy="wall-sec">复制</button></div>
-              <div class="kv"><span class="kv-label">毫秒级 (13)</span><span class="kv-value em" id="wall-ms">—</span><button class="copy" type="button" data-copy="wall-ms">复制</button></div>
+              <div class="kv"><span class="kv-label">星期</span><span class="kv-value" id="wall-weekday">—</span><button class="copy" type="button" data-copy="wall-weekday">复制</button></div>
               <div class="kv"><span class="kv-label">ISO 8601</span><span class="kv-value" id="wall-iso">—</span><button class="copy" type="button" data-copy="wall-iso">复制</button></div>
-              <div class="kv"><span class="kv-label">回读校验</span><span class="kv-value" id="wall-echo">—</span></div>
+              <div class="kv"><span class="kv-label">UTC 时刻</span><span class="kv-value" id="wall-utc">—</span><button class="copy" type="button" data-copy="wall-utc">复制</button></div>
+              <div class="kv"><span class="kv-label">RFC 2822</span><span class="kv-value" id="wall-rfc">—</span><button class="copy" type="button" data-copy="wall-rfc">复制</button></div>
+              <div class="kv"><span class="kv-label">年内第几天</span><span class="kv-value" id="wall-doy">—</span></div>
             </div>
           </div>
         </section>
@@ -143,11 +141,6 @@
         <span class="hint">按所选时区计算</span>
       </div>
       <div id="base-groups"></div>
-      <p class="rail-note">
-        两组基准时间：<b>典型分钟级</b>选 年、月、时、分，分按 <b>1 / 5 / 15 分钟</b>切换粒度；
-        <b>典型日</b>选 年、月、该月哪一天（第一天或第 N 周周一）。
-        选中即给出时间戳。「第 N 周周一」取该月第 N 个周一。未手动改动的一组会自动停在<b>最近一个</b>已发生的时刻。
-      </p>
     </aside>
   </div>
 </main>

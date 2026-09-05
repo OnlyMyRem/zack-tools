@@ -77,7 +77,6 @@
         fitTzMeta();
       }
     }
-    renderRelative(now);
     var stamp = tz + "|" + Math.floor(now / 1000);
     if (stamp !== lastRailStamp) {
       lastRailStamp = stamp;
@@ -107,11 +106,6 @@
     meta.classList.remove("no-zone");
     if (clipped(meta)) box.classList.add("tight");
     if (clipped(meta)) meta.classList.add("no-zone");
-  }
-
-  function renderRelative(now) {
-    var rel = $("ts-relative");
-    if (rel && lastParsedInstant !== null) rel.textContent = T.humanDiff(now - lastParsedInstant);
   }
 
   /* ---------- 「填入下方」落点动画 ---------- */
@@ -206,8 +200,6 @@
 
   /* ---------- 时间戳 → 日期时间 ---------- */
 
-  var lastParsedInstant = null;
-
   function readDigits(raw) {
     var s = String(raw || "").trim().replace(/[,\s_]/g, "");
     if (!/^-?\d{1,20}$/.test(s)) return null;
@@ -256,9 +248,8 @@
   }
 
   function clearResult() {
-    lastParsedInstant = null;
     copyTextOf("ts-main-row", "");
-    ["ts-datetime", "ts-weekday", "ts-iso", "ts-utc", "ts-rfc", "ts-ms", "ts-s", "ts-relative", "ts-doy"].forEach(function (id) {
+    ["ts-datetime", "ts-weekday", "ts-iso", "ts-utc", "ts-rfc", "ts-doy"].forEach(function (id) {
       set(id, "");
     });
     $("ts-src-note").textContent = "";
@@ -282,7 +273,6 @@
     var picked = tsUnit.value;
     var r = toInstant(digits, picked);
     var instant = r.instant;
-    lastParsedInstant = instant;
 
     if (!isFinite(instant) || Math.abs(instant) > 8.64e15) {
       clearResult();
@@ -294,8 +284,7 @@
     var note = $("ts-src-note");
     note.className = "note";
     note.textContent =
-      "识别为" + (r.unit === "ms" ? "毫秒" : "秒") + "级时间戳，按 " + tz + "（" + T.tzLabel(instant, tz) + "）解析。" +
-      (picked === "auto" && digits.replace("-", "").length > 14 ? " 位数偏多，可在上方手动指定单位。" : "");
+      picked === "auto" && digits.replace("-", "").length > 14 ? " 位数偏多，可在上方手动指定单位。" : "";
 
     setMainDateTime(instant);
     // 星期另起一段、间距由 CSS 给，复制给代码用的仍是干净的 YYYY-MM-DD HH:MM:SS。
@@ -304,46 +293,17 @@
     set("ts-iso", isoWithOffset(instant));
     set("ts-utc", new Date(instant).toISOString());
     set("ts-rfc", rfc2822(instant));
-    set("ts-ms", String(instant));
-    set("ts-s", String(Math.floor(instant / 1000)));
     var doy = dayOfYear(instant);
     set("ts-doy", "第 " + doy.n + " 天 / 全年 " + doy.total + " 天");
-    set("ts-relative", T.humanDiff(Date.now() - instant));
   }
 
   /* ---------- 日期时间 → 时间戳 ---------- */
 
   var lastWallInstant = null;
 
-  function echoWall(instant) {
-    var el = $("wall-echo");
-    if (!el) return;
-    var dt = document.createElement("span");
-    dt.className = "dt";
-    dt.textContent = T.format(instant, tz);
-    var zone = document.createElement("span");
-    zone.className = "tz";
-    zone.textContent = tz;
-    el.textContent = "";
-    el.appendChild(dt);
-    el.appendChild(zone);
-    el.classList.remove("empty-val");
-    fitWallEcho();
-  }
-
-  // 长时区 ID（America/North_Dakota/New_Salem）在这一行塞不下时整条省掉 ID，
-  // 只留完整的日期时间：与其让省略号把 ID 咬成半截，不如少一项——时区本来就写在上方下拉框里。
-  function fitWallEcho() {
-    var el = $("wall-echo");
-    if (!el) return;
-    el.classList.remove("no-zone");
-    if (el.children.length < 2) return;
-    if (clipped(el)) el.classList.add("no-zone");
-  }
-
   function clearWall() {
     lastWallInstant = null;
-    ["wall-sec", "wall-ms", "wall-iso", "wall-echo"].forEach(function (id) { set(id, ""); });
+    ["wall-sec", "wall-ms", "wall-weekday", "wall-iso", "wall-utc", "wall-rfc", "wall-doy"].forEach(function (id) { set(id, ""); });
     wallInput.classList.remove("invalid");
   }
 
@@ -374,8 +334,12 @@
 
     set("wall-sec", String(Math.floor(instant / 1000)));
     set("wall-ms", String(instant));
+    set("wall-weekday", T.weekdayName(instant, tz) + "（" + T.weekdayEn(instant, tz) + "）");
     set("wall-iso", isoWithOffset(instant));
-    echoWall(instant);
+    set("wall-utc", new Date(instant).toISOString());
+    set("wall-rfc", rfc2822(instant));
+    var doy = dayOfYear(instant);
+    set("wall-doy", "第 " + doy.n + " 天 / 全年 " + doy.total + " 天");
     wallToPicker(instant);
 
     var note = $("wall-note");
@@ -385,8 +349,8 @@
         tz + " 当天不存在 " + U.pad(w.h) + ":" + U.pad(w.mi) + "（夏令时切换跳过），已按 " +
         U.pad(back.hour) + ":" + U.pad(back.minute) + " 计算。";
     } else {
-      note.className = "note ok";
-      note.textContent = "按 " + tz + "（" + T.tzLabel(instant, tz) + "）解释，" + T.weekdayName(instant, tz) + "。";
+      note.className = "note";
+      note.textContent = "";
     }
   }
 
@@ -445,35 +409,38 @@
     return { year: y, month: mo, day: d, hour: h, minute: mi, second: 0 };
   }
 
-  // 「分」列按所选粒度重建选项；save 值会随粒度取整，保证始终命中某个合法分钟。
+  // 「分」列按所选粒度重建选项，纯数字显示（rail 窄放不下单位）；save 值会随粒度取整，保证始终命中某个合法分钟。
   function minuteOptions(step) {
-    return range(0, 59, step).map(function (m) { return { v: m, t: U.pad(m) + " 分" }; });
+    return range(0, 59, step).map(function (m) { return { v: m, t: U.pad(m) }; });
   }
 
   var BASE_GROUPS = [
     {
       key: "day",
       title: "典型分钟级",
-      // 粒度按钮：切换底下「分」列的步进。
+      desc: "选 年、月、日、时、分；分按 1 / 5 / 15 分钟切换粒度。未手动改动会自动停在最近时刻。",
+      // 粒度按钮：切换「分」列的步进。
       granular: [
         { step: 1, t: "1 分钟", def: false },
         { step: 5, t: "5 分钟", def: true },
         { step: 15, t: "15 分钟", def: false },
       ],
       cols: [
-        { label: "年份", options: range(1970, 2050).map(function (y) { return { v: y, t: String(y) }; }) },
-        { label: "月份", options: range(1, 12).map(function (mo) { return { v: mo, t: mo + " 月" }; }) },
-        { label: "时", options: range(0, 23).map(function (h) { return { v: h, t: U.pad(h) + " 时" }; }) },
+        { label: "年", options: range(1970, 2050).map(function (y) { return { v: y, t: String(y) }; }) },
+        { label: "月", options: range(1, 12).map(function (mo) { return { v: mo, t: String(mo) }; }) },
+        { label: "日", options: range(1, 31).map(function (d) { return { v: d, t: String(d) }; }) },
+        { label: "时", options: range(0, 23).map(function (h) { return { v: h, t: U.pad(h) }; }) },
         { label: "分", step: 5, options: minuteOptions(5) },
       ],
       resolve: function (now, v) {
-        var want = wantParts(v[0], v[1], 1, v[2], v[3]);
-        return { instant: T.zonedToInstant(v[0], v[1], 1, v[2], v[3], 0, tz), want: want };
+        var want = wantParts(v[0], v[1], v[2], v[3], v[4]);
+        return { instant: T.zonedToInstant(v[0], v[1], v[2], v[3], v[4], 0, tz), want: want };
       },
     },
     {
       key: "ym",
       title: "典型日",
+      desc: "选 年、月、该月哪一天（第一天或第 N 周周一）。未手动改动会自动停在最近时刻。",
       cols: [
         { label: "年份", options: range(1970, 2050).map(function (y) { return { v: y, t: String(y) }; }) },
         { label: "月份", options: range(1, 12).map(function (mo) { return { v: mo, t: mo + " 月" }; }) },
@@ -558,6 +525,7 @@
             '<span class="bg-tag auto" data-role="tag">自动 · 最近</span>' +
             '<button class="bg-recent" type="button" data-role="recent" disabled>回到最近</button>' +
           "</span></div>" +
+        (g.desc ? '<p class="bg-desc">' + g.desc + "</p>" : "") +
         (g.granular && g.granular.length
           ? '<div class="bg-gran" data-role="gran">' +
             g.granular.map(function (gr) {
@@ -803,7 +771,6 @@
     startClock();
     window.addEventListener("resize", function () {
       fitTzMeta();
-      fitWallEcho();
     });
 
     tsInput.addEventListener("input", convertFromTs);
@@ -813,17 +780,6 @@
     // 点完日历焦点会留在这个透明输入框上，键盘改值时也得立刻同步，不许两头悄悄分叉。
     wallPicker.addEventListener("input", pickerToWall);
     bindCalPicker();
-
-    $("wall-now").addEventListener("click", function () {
-      setWallFromInstant(Date.now());
-    });
-
-    Array.prototype.forEach.call(document.querySelectorAll("[data-shift]"), function (b) {
-      b.addEventListener("click", function () {
-        var base = lastWallInstant === null ? Date.now() : lastWallInstant;
-        setWallFromInstant(base + Number(b.dataset.shift));
-      });
-    });
 
     $("now-quick").addEventListener("click", function (e) {
       var chip = e.target.closest(".chip");
