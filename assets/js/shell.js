@@ -12,8 +12,14 @@
   // 长地址（/tools/<slug>/index.html）还是短地址（/<slug>/）访问，
   // 顶栏品牌与面包屑「全部工具」都能稳定回到根目录首页。
   function homeHref() {
-    if (root === "./" || root === "." || root === "" || root === "/") return "/index.html";
-    return root + "index.html";
+    if (window.location.protocol === "file:") {
+      // 本地双击打开：保留 index.html，否则 file:// 会落到目录列表
+      if (root === "./" || root === "." || root === "" || root === "/") return "index.html";
+      return root + "index.html";
+    }
+    // Web 服务器部署：回到目录根，让地址栏保持 https://tools.fanzehao.fun/ 这种干净形式
+    if (root === "./" || root === "." || root === "" || root === "/") return "/";
+    return root; // 已以 / 结尾
   }
 
   function el(html) {
