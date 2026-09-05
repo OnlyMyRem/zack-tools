@@ -300,10 +300,24 @@
   /* ---------- 日期时间 → 时间戳 ---------- */
 
   var lastWallInstant = null;
+  // 主结果行当前显示哪一档：秒级 (s) 还是毫秒级 (ms)。切换只影响显示，不重算。
+  var wallUnit = "s";
+
+  // 值区同一时刻只放一份时间戳，档位由右上角两段开关决定；复制按钮复制的就是这份。
+  function renderWallMain() {
+    set("wall-ts", lastWallInstant === null ? "" : String(wallUnit === "ms" ? lastWallInstant : Math.floor(lastWallInstant / 1000)));
+  }
+
+  // 把两段开关的高亮移到当前档位。
+  function paintWallUnit() {
+    Array.prototype.forEach.call(document.querySelectorAll("#wall-unit .unit-btn"), function (b) {
+      b.setAttribute("aria-pressed", b.dataset.unit === wallUnit ? "true" : "false");
+    });
+  }
 
   function clearWall() {
     lastWallInstant = null;
-    ["wall-sec", "wall-ms", "wall-weekday", "wall-iso", "wall-utc", "wall-rfc", "wall-doy"].forEach(function (id) { set(id, ""); });
+    ["wall-ts", "wall-weekday", "wall-iso", "wall-utc", "wall-rfc", "wall-doy"].forEach(function (id) { set(id, ""); });
     wallInput.classList.remove("invalid");
   }
 
@@ -332,8 +346,7 @@
     var drift = back.hour !== w.h || back.minute !== w.mi;
     lastWallInstant = instant;
 
-    set("wall-sec", String(Math.floor(instant / 1000)));
-    set("wall-ms", String(instant));
+    renderWallMain();
     set("wall-weekday", T.weekdayName(instant, tz) + "（" + T.weekdayEn(instant, tz) + "）");
     set("wall-iso", isoWithOffset(instant));
     set("wall-utc", new Date(instant).toISOString());
@@ -780,6 +793,16 @@
     // 点完日历焦点会留在这个透明输入框上，键盘改值时也得立刻同步，不许两头悄悄分叉。
     wallPicker.addEventListener("input", pickerToWall);
     bindCalPicker();
+
+    // 秒级 / 毫秒级两段开关：只切显示档位，时间本身在墙钟输入不变时也不变。
+    $("wall-unit").addEventListener("click", function (e) {
+      var btn = e.target.closest(".unit-btn");
+      if (!btn) return;
+      wallUnit = btn.dataset.unit;
+      paintWallUnit();
+      renderWallMain();
+    });
+    paintWallUnit();
 
     $("now-quick").addEventListener("click", function (e) {
       var chip = e.target.closest(".chip");

@@ -148,24 +148,31 @@ body {
   display: none;
 }
 
-/* 顶部两个实时时间戳：从两块独立大卡片压成一条信息带里的两格。
-   共用 .stat-card 保留结构，但在这里退掉边框与底色、收紧数值字号，
-   两格之间只留一条虚线分隔——不再各占一块带边框的大块头。 */
+/* 顶部两个实时时间戳：压缩成信息带里的两格，两格之间只留一条虚线分隔。
+   格内是两行小表：第一行大号数值 + 复制按钮，第二行单位说明。
+   数值列占剩余宽度、复制按钮钉在行尾，与 .kv 结果行的复制按钮同一副长相，
+   不再做成右上角无边框的文字链接。 */
 .top-panel .stat-card {
-  position: relative;
-  gap: 4px;
-  padding: 5px 18px 7px 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-rows: auto auto;
+  align-items: center;
+  column-gap: 12px;
+  row-gap: 2px;
+  padding: 4px 0 6px;
   border: 0;
   border-radius: 0;
   background: none;
 }
 
 .top-panel .stat-card:first-child {
-  padding-right: 20px;
+  padding-right: 18px;
   border-right: 1px dashed var(--border);
 }
 
 .top-panel .stat-card b {
+  grid-row: 1;
+  grid-column: 1;
   font-variant-numeric: tabular-nums;
   letter-spacing: 0.4px;
   font-size: 1.45rem;
@@ -180,29 +187,35 @@ body {
 }
 
 .top-panel .stat-card span {
+  grid-row: 2;
+  grid-column: 1;
   font-size: 0.7rem;
 }
 
-/* 复制做成右上角的安静文字链接，不再占用一个带边框的方块。 */
+/* 与 .kv / .tz-now / 基准栏里的复制按钮同款：透明底、细边框的小胶囊。 */
 .top-panel .stat-card .copy {
-  position: absolute;
-  top: 0;
-  right: 0;
-  background: none;
-  border: 0;
-  border-radius: 0;
+  grid-row: 1;
+  grid-column: 2;
+  align-self: center;
+  justify-self: end;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 8px;
   color: var(--muted);
-  padding: 0;
-  font-size: 0.66rem;
+  padding: 4px 10px;
+  font-size: 0.72rem;
   cursor: pointer;
-  transition: color 0.15s ease;
+  transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
 }
 
 .top-panel .stat-card .copy:hover {
+  border-color: var(--accent);
   color: var(--accent);
+  background: var(--accent-dim);
 }
 
 .top-panel .stat-card .copy.ok {
+  border-color: var(--success);
   color: var(--success);
 }
 
@@ -487,8 +500,8 @@ input.landed {
 }
 
 /* 「日期时间 → 时间戳」主结果行：与 #ts-main-row 同规格，保证两块面板的
-   星期 / ISO / UTC / RFC / 年内第几天 逐行水平对齐。值区是「秒 + 毫秒」两段，
-   各带自己的单位小标和复制按钮。 */
+   星期 / ISO / UTC / RFC / 年内第几天 逐行水平对齐。
+   值区同一时刻只放一份时间戳，档位由右侧两段开关切换；复制按钮复制的就是当前这份。 */
 #wall-main-row {
   gap: 8px;
   padding: 7px 10px;
@@ -503,33 +516,49 @@ input.landed {
 }
 
 #wall-main-row .kv-value {
-  display: flex;
-  gap: 14px;
+  flex: 1;
+  min-width: 0;
   font-size: 0.84rem;
   white-space: nowrap;
   word-break: normal;
   overflow: hidden;
-}
-
-#wall-main-row .kv-value .sub {
-  display: flex;
-  align-items: baseline;
-  gap: 5px;
-  min-width: 0;
-}
-
-#wall-main-row .kv-value .sub b {
-  font-weight: inherit;
-  color: inherit;
-  overflow: hidden;
   text-overflow: ellipsis;
 }
 
-#wall-main-row .kv-value .sub .u {
+/* 秒级 / 毫秒级两段开关：胶囊状容器，高亮随 aria-pressed 走；
+   与右侧基准栏的粒度按钮同一套视觉语言。 */
+#wall-main-row .unit-switch {
   flex: none;
-  font-size: 0.66rem;
+  display: inline-flex;
+  gap: 2px;
+  padding: 2px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+#wall-main-row .unit-btn {
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
   color: var(--muted);
-  font-weight: 400;
+  font-family: inherit;
+  font-size: 0.68rem;
+  padding: 3px 9px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: color 0.15s ease, background 0.15s ease;
+}
+
+#wall-main-row .unit-btn:hover {
+  color: var(--accent);
+  background: var(--accent-dim);
+}
+
+#wall-main-row .unit-btn[aria-pressed="true"] {
+  color: var(--accent-2);
+  background: var(--accent-dim);
+  font-weight: 600;
 }
 
 #wall-main-row .copy {
@@ -576,9 +605,15 @@ input.landed {
     text-overflow: clip;
   }
 
-  /* 这一档标签本来就独占一行，主结果行的「秒 / 毫秒」两段各自换行。 */
+  /* 标签独占一行后，值、两段开关、复制按钮都在第二行排开；值太长时允许折行。 */
   #wall-main-row {
     flex-wrap: wrap;
+  }
+
+  #wall-main-row .kv-value {
+    white-space: normal;
+    word-break: break-all;
+    overflow: visible;
   }
 }
 

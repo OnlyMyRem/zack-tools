@@ -79,15 +79,57 @@
   padding: 18px 22px;
 }
 
-/* 表达式吃剩余宽度，时区那一栏按内容定宽：两者都是「标签在上、控件在下」。 */
-.expr-grid {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(218px, 300px);
-  gap: 0 18px;
-  align-items: start;
+/* 时区行单独放在表达式上方：标签与「从位置获取」同排、下拉在标签下；
+   功能与时间戳页同款，但这里这一行没有右侧的内容撑场，
+   标签和文字按钮靠左挨着，不把按钮甩到整行最右。 */
+.tz-label-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: flex-start;
+  gap: 14px;
 }
 
-.tz-acts {
+.tz-locate {
+  background: none;
+  border: 0;
+  padding: 0;
+  font-family: inherit;
+  font-size: 0.72rem;
+  letter-spacing: 0.5px;
+  color: var(--accent);
+  cursor: pointer;
+}
+
+.tz-locate:hover {
+  text-decoration: underline;
+}
+
+.tz-locate:disabled {
+  color: var(--done);
+  cursor: default;
+  text-decoration: none;
+}
+
+/* 下拉不铺满整行，免得单个时区名把面板顶部撑得很空。 */
+.tz-field select {
+  width: min(372px, 100%);
+}
+
+/* 复制 / 清空两个按钮与表达式输入框同一水平线，钉在输入框右边；
+   容器太窄时按钮整组换行，不与输入框拆散。 */
+.expr-field .expr-acts {
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.expr-field #expr {
+  flex: 1 1 360px;
+  min-width: 0;
+}
+
+.expr-field .expr-btns {
+  flex: none;
+  display: flex;
   gap: 8px;
 }
 
@@ -106,13 +148,6 @@
   visibility: visible;
 }
 
-@media (max-width: 720px) {
-  .expr-grid {
-    grid-template-columns: minmax(0, 1fr);
-    gap: 14px 0;
-  }
-}
-
 #expr {
   font-family: "Cascadia Mono", "JetBrains Mono", Consolas, monospace;
   font-size: 1.18rem;
@@ -124,8 +159,9 @@
   border-color: var(--danger);
 }
 
-/* 表达式下方的分段标签：把每一段对应到「秒/分/时/日/月/周」，
-   段数不同的方言切换时这里会整排重排，避免用户对着下标数段。 */
+/* 表达式正下方一排小段签：只标字段名 + 原文，不写逐字段解释——
+   解释文案长短不一会让卡片忽高忽低，已去掉。段数随方言变（5/6/7），
+   一排 flex 卡片自动均分宽度，太挤时换行，高度恒定。 */
 .seg-labels {
   display: flex;
   gap: 6px;
@@ -134,9 +170,11 @@
 
 .seg {
   flex: 1 1 0;
-  min-width: 62px;
-  text-align: center;
-  padding: 6px 4px;
+  min-width: 84px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 6px 8px;
   border: 1px solid var(--border);
   border-radius: 8px;
   background: var(--panel-2);
@@ -145,8 +183,9 @@
 .seg i {
   display: block;
   font-style: normal;
-  font-size: 0.68rem;
-  letter-spacing: 1px;
+  font-size: 0.66rem;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
   color: var(--muted);
 }
 
@@ -156,9 +195,9 @@
   font-size: 0.82rem;
   font-weight: 600;
   color: var(--accent-2);
+  white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 .seg.empty b {
@@ -168,49 +207,6 @@
 /* 预留两行：合法与报错之间的文案长短不再把下方两栏顶来顶去。 */
 #status {
   min-height: 42px;
-}
-
-.parse-table {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-/* 每一行各自是一个 grid，所以 raw 那列必须定宽（220px）才能上下对齐；
-   220px 刚好容得下「1,2,3,…,12」这种整年列举，不至于抻成两行。
-   剩余宽度全给中文解释，右栏 ~898px 下不至于排成三段稀疏空列。 */
-.parse-row {
-  display: grid;
-  grid-template-columns: 52px 220px minmax(0, 1fr);
-  gap: 12px;
-  align-items: center;
-  padding: 9px 14px;
-  background: var(--panel-2);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-}
-
-.parse-row .name {
-  font-size: 0.78rem;
-  font-weight: 700;
-  letter-spacing: 1px;
-  color: var(--muted);
-}
-
-.parse-row .raw {
-  font-family: "Cascadia Mono", Consolas, monospace;
-  font-size: 0.9rem;
-  color: var(--accent-2);
-  word-break: break-all;
-}
-
-.parse-row .mean {
-  font-size: 0.88rem;
-  color: var(--text);
-}
-
-.parse-row.broken {
-  border-color: var(--danger);
 }
 
 /* 字段生成器：一个字段一张卡，卡内是模式切换 + 数值网格。 */
@@ -353,6 +349,28 @@
   line-height: 1.5;
 }
 
+/* 表达式的人话总结挪进「未来触发时间」面板顶部：一句话讲清何时触发，紧接着就是触发时刻。
+   语法出错时该位置只放剩余问题的红字提示。 */
+.sched-line {
+  margin-bottom: 12px;
+  padding: 10px 14px;
+  border-left: 3px solid var(--accent-2);
+  background: var(--panel-2);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+
+.sched-line:empty {
+  display: none;
+}
+
+.sched-line.err {
+  border-left-color: var(--danger);
+  color: var(--danger);
+  font-size: 0.78rem;
+}
+
 /* 一行的最宽内容（序号 + 19 字符时间 + 「周五 · 下次 -2 小时」 + 内边距）约 316px，
    所以最小轨给到 330px：宁可两列也不要时间折断。 */
 .times {
@@ -416,6 +434,17 @@
   font-size: 0.76rem;
 }
 
+/* 当前格式表达不了的预设：置灰、不响应 hover 高亮，点击的提示走 data-reason 的 toast。 */
+.chip.disabled,
+.chip.disabled:hover,
+.chip.disabled:focus-visible {
+  opacity: 0.45;
+  cursor: not-allowed;
+  border-color: var(--border);
+  background: var(--panel-2);
+  color: var(--muted);
+}
+
 .preset-group .pg-label {
   font-size: 0.72rem;
   text-transform: uppercase;
@@ -440,4 +469,146 @@
   padding: 1px 5px;
   font-size: 0.8em;
   color: var(--accent-2);
+}
+
+/* ---------- 格式行：三个 chip 靠左，字段速查按钮推到最右 ---------- */
+
+.fmt-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.fmt-bar .chips {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.cheat-btn {
+  flex: none;
+  margin-left: auto;
+}
+
+/* ---------- 常用预设 / 字段生成器 选项卡 ---------- */
+
+.rail-tabs {
+  display: flex;
+  gap: 18px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 14px;
+}
+
+.rail-tabs .tab {
+  background: none;
+  border: 0;
+  padding: 4px 2px 10px;
+  margin-bottom: -1px;
+  font-size: 0.9rem;
+  font-weight: 640;
+  color: var(--muted);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+
+.rail-tabs .tab:hover {
+  color: var(--text);
+}
+
+.rail-tabs .tab.on {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+}
+
+.rail-pane {
+  display: none;
+}
+
+.rail-pane.on {
+  display: block;
+}
+
+/* 生成器卡片收进窄栏：一列铺开，宽度与原来宽栏里的单卡基本一致。 */
+.cron-rail .builder {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+/* ---------- 字段速查弹窗 ---------- */
+
+#cheat-dialog {
+  width: min(780px, 94vw);
+  padding: 20px 24px;
+}
+
+.dlg-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.dlg-head h2 {
+  font-size: 1.02rem;
+  font-weight: 640;
+}
+
+.dlg-sub {
+  margin: 6px 0 12px;
+  font-size: 0.78rem;
+  line-height: 1.6;
+  color: var(--muted);
+}
+
+#cheat-dialog .table-wrap {
+  max-height: min(62vh, 520px);
+  overflow: auto;
+}
+
+/* ---------- 一屏应用壳（宽屏桌面） ----------
+   左右两栏都收进视口，页面本身不再整体滚动：滚轮落在左栏时滚的是左栏自己，
+   不会再把右栏顶部的表达式一起带出视口；右栏内容更高时（如展开 50 次触发时间）
+   在自己栏内滚动，顶部表达式面板 sticky 钉在栏顶，始终看得见。
+   窄屏 / 矮窗口退回普通页面流，保持整页上下滚。 */
+@media (min-width: 1121px) and (min-height: 640px) {
+  body[data-page="cron"] {
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  body[data-page="cron"] .wrap {
+    flex: 1 1 auto;
+    min-height: 0;
+  }
+
+  body[data-page="cron"] .crumb {
+    flex: none;
+  }
+
+  body[data-page="cron"] .cron-cols {
+    flex: 1 1 auto;
+    min-height: 0;
+    grid-template-rows: minmax(0, 1fr);
+    align-items: stretch;
+  }
+
+  body[data-page="cron"] .cron-main,
+  body[data-page="cron"] .cron-rail {
+    min-height: 0;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-gutter: stable;
+  }
+
+  body[data-page="cron"] .cron-rail {
+    position: static;
+    align-self: stretch;
+  }
+
+  body[data-page="cron"] .cron-main > .top-panel {
+    position: sticky;
+    top: 0;
+    z-index: 4;
+    box-shadow: 0 12px 20px -18px rgba(0, 0, 0, 0.5);
+  }
 }

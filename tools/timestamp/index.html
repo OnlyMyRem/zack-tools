@@ -118,10 +118,12 @@
             <p class="note" id="wall-note"></p>
             <div class="kv" id="wall-main-row">
               <span class="kv-label">时间戳</span>
-              <span class="kv-value em" id="wall-split">
-                <span class="sub"><b id="wall-sec">—</b><span class="u">秒</span><button class="copy" type="button" data-copy="wall-sec">复制</button></span>
-                <span class="sub"><b id="wall-ms">—</b><span class="u">毫秒</span><button class="copy" type="button" data-copy="wall-ms">复制</button></span>
+              <span class="kv-value em" id="wall-ts">—</span>
+              <span class="unit-switch" id="wall-unit" role="group" aria-label="切换秒级 / 毫秒级">
+                <button class="unit-btn" type="button" data-unit="s" aria-pressed="true">秒级</button>
+                <button class="unit-btn" type="button" data-unit="ms" aria-pressed="false">毫秒级</button>
               </span>
+              <button class="copy" type="button" data-copy="wall-ts">复制</button>
             </div>
             <div class="facts">
               <div class="kv"><span class="kv-label">星期</span><span class="kv-value" id="wall-weekday">—</span><button class="copy" type="button" data-copy="wall-weekday">复制</button></div>

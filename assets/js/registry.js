@@ -19,7 +19,7 @@
       icon: "🗓",
       tags: ["Spring", "Quartz", "Linux"],
       summary:
-        "可视化生成 Cron 表达式，自动识别 Spring / Quartz / Linux 三种格式，逐字段中文解析并预览未来若干次触发时间。",
+        "可视化生成 Cron 表达式，自动识别 Spring / Quartz / Linux 三种格式，支持任意时区（含按定位获取）并预览未来若干次触发时间。",
     },
   ];
 

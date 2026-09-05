@@ -104,6 +104,58 @@ button {
   gap: 8px;
 }
 
+/* 顶栏工具导航：品牌名右侧一条竖线，逐个列出全部工具，当前页高亮。
+   窄屏放不下就让出空间给品牌与主题按钮，跳转靠首页卡片即可。 */
+.hang-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+}
+
+.hang-div {
+  flex: none;
+  width: 1px;
+  height: 20px;
+  background: var(--border);
+}
+
+.tool-nav {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  min-width: 0;
+}
+
+.tool-nav-link {
+  color: var(--muted);
+  font-size: 0.84rem;
+  line-height: 1;
+  white-space: nowrap;
+  padding: 7px 9px;
+  border-radius: 7px;
+  transition: color 0.15s ease, background 0.15s ease;
+}
+
+.tool-nav-link:hover {
+  color: var(--text);
+  background: var(--accent-dim);
+  text-decoration: none;
+}
+
+.tool-nav-link.is-cur {
+  color: var(--accent);
+  font-weight: 600;
+  background: var(--accent-dim);
+}
+
+@media (max-width: 720px) {
+  .hang-div,
+  .tool-nav {
+    display: none;
+  }
+}
+
 /* 内容列宽由 --content-max 统一控制，宽屏工具可在自己的 css 里覆写。 */
 .wrap {
   width: 100%;

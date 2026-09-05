@@ -28,16 +28,17 @@
   // 年字段只在 7 段表达式里出现，量纲与其它字段不同，单独一份定义。
   var YEAR_DEF = { key: "year", label: "年", unit: "年", min: 1970, max: 2299 };
 
+  // 键序即界面格式钮的顺序：Linux 放最左并作默认，依次是 Spring、Quartz。
   var FORMATS = {
-    quartz: { key: "quartz", name: "Quartz", count: 6, hasSec: true, dowFromOne: true, allowQuestion: true, strictQuestion: true, supportsLW: true, supportsYear: true,
-      orderLabel: "秒 分 时 日 月 周 [年]",
-      hint: "6 或 7 段。「日」与「周」必须恰好有一个写 ? ，两者都给具体值会抛 ParseException；数字周从 1=周日 起；第 7 段「年」是 Quartz 独有，L、W、# 与 Spring 通用。用于 Quartz Scheduler、阿里 SchedulerX、多数国产任务平台。" },
-    spring: { key: "spring", name: "Spring", count: 6, hasSec: true, dowFromOne: false, allowQuestion: true, strictQuestion: false, supportsLW: true, supportsYear: false,
-      orderLabel: "秒 分 时 日 月 周",
-      hint: "6 段，含秒。数字周 0=周日（7 也是周日）；同样接受 ? 与 L、W、# ，但不强制日/周二选一。用于 Spring @Scheduled、Quartz 兼容写法、xxl-job 默认。" },
     linux: { key: "linux", name: "Linux", count: 5, hasSec: false, dowFromOne: false, allowQuestion: false, strictQuestion: false, supportsLW: false, supportsYear: false,
       orderLabel: "分 时 日 月 周",
       hint: "5 段，无秒，也没有 ? 和 L、W、# 。数字周 0=周日；日与周都写具体值时取并集（Vixie cron 语义）。用于 crontab、K8s CronJob、GitHub Actions。" },
+    spring: { key: "spring", name: "Spring", count: 6, hasSec: true, dowFromOne: false, allowQuestion: true, strictQuestion: false, supportsLW: true, supportsYear: false,
+      orderLabel: "秒 分 时 日 月 周",
+      hint: "6 段，含秒。数字周 0=周日（7 也是周日）；同样接受 ? 与 L、W、# ，但不强制日/周二选一；另可直写 5 段（无秒），秒按 0 处理。用于 Spring @Scheduled、Quartz 兼容写法、xxl-job 默认。" },
+    quartz: { key: "quartz", name: "Quartz", count: 6, hasSec: true, dowFromOne: true, allowQuestion: true, strictQuestion: true, supportsLW: true, supportsYear: true,
+      orderLabel: "秒 分 时 日 月 周 [年]",
+      hint: "6 或 7 段。「日」与「周」必须恰好有一个写 ? ，两者都给具体值会抛 ParseException；数字周从 1=周日 起；第 7 段「年」是 Quartz 独有，L、W、# 与 Spring 通用；另可直写 5 段（无秒），秒按 0 处理。用于 Quartz Scheduler、阿里 SchedulerX、多数国产任务平台。" },
   };
 
   /* ---------- token 解析 ---------- */
@@ -249,12 +250,16 @@
     }
     var parts = text.split(" ");
     var hasYear = false;
+    // 含秒方言只写 5 段时按无秒简写处理：缺少的秒字段补 0，不报错也不改写文本。
+    var noSecText = false;
 
     if (parts.length !== fmt.count) {
       if (fmt.supportsYear && parts.length === 7) {
         hasYear = true;
       } else if (parts.length === 5 && fmt.hasSec) {
-        errors.push("当前 " + fmt.name + " 需要 6 段（" + fmt.orderLabel + "），表达式只有 5 段：缺少秒字段，可切换到 Linux 格式。");
+        // Quartz / Spring 默认要 6 段，但 Linux 式 5 段简写（分 时 日 月 周）也直接收，
+        // 语义与 Linux 完全一致，只是秒固定为 0——方便从 Linux 切过来不重写表达式。
+        noSecText = true;
       } else if (parts.length === 6 && !fmt.hasSec) {
         errors.push("Linux crontab 只接受 5 段（分 时 日 月 周），当前 6 段：含秒的写法请改用 Spring 或 Quartz。");
       } else if (parts.length === 7) {
@@ -269,9 +274,9 @@
     }
 
     var i = 0;
-    var spec = { ok: true, format: fmt, text: text, hasYear: hasYear, errors: errors, warnings: warnings };
-    if (!fmt.hasSec) {
-      // Linux 没有秒位，补常量 0，使后续推算与展示仍按「秒分时日月周」统一处理。
+    var spec = { ok: true, format: fmt, text: text, hasYear: hasYear, noSecText: noSecText, errors: errors, warnings: warnings };
+    if (!fmt.hasSec || noSecText) {
+      // Linux 没有秒位；含秒方言的 5 段简写同理，补常量 0，使后续推算与展示仍按「秒分时日月周」统一处理。
       spec.sec = parseField("0", DEFS.sec, fmt, errors);
       spec.sec.linuxFilled = true;
     } else {
@@ -465,6 +470,8 @@
   }
 
   function describeField(f, def) {
+    // ? 的意思是「这一位不参与约束」，不能说成「每天」或「星期不限」。
+    if (f.question) return "不指定";
     if (def.key === "dom") {
       var dparts = [];
       if (f.domLast) dparts.push(f.domOffsetLast ? "月末往前 " + f.domOffsetLast + " 天" : "每月最后一天");
@@ -542,6 +549,44 @@
 
   /* ---------- 方言互转 ---------- */
 
+  // 周的数字在各方言里起点不同（Quartz 1=周日，Linux/Spring 0=周日），
+  // 原样搬运会把「周一至周五」悄悄搬成另一批日子，所以换算时要把 dow 片段里的
+  // 数字周序改写成等价写法；名称（MON…）、?、*、# / L 的序数部分不参与换算。
+  function remapDowNum(nStr, srcOne, dstOne) {
+    var n = parseInt(nStr, 10);
+    if (isNaN(n)) return nStr;
+    var js = srcOne ? n - 1 : (n === 7 ? 0 : n); // 先回到内部统一的 0=周日
+    return String(dstOne ? js + 1 : js);
+  }
+
+  function remapDowToken(tok, srcOne, dstOne) {
+    if (tok === "*" || tok === "?" || tok === "") return tok;
+    if (!/[0-9]/.test(tok)) return tok; // 纯名称（MON-FRI、FRIL…）三种方言写法一致
+    var hash = tok.indexOf("#");
+    if (hash !== -1) {
+      // # 右边是「第几个」，是序数不是星期几，不能跟着换算。
+      return remapDowToken(tok.slice(0, hash), srcOne, dstOne) + tok.slice(hash);
+    }
+    if (/^[0-9]+L$/i.test(tok)) {
+      // 6L / 7L 这类：只有前导数字是星期序。
+      return remapDowToken(tok.slice(0, -1), srcOne, dstOne) + "L";
+    }
+    var parts = tok.split("/");
+    var head = parts[0];
+    var step = parts.length > 1 ? "/" + parts.slice(1).join("/") : "";
+    if (head === "*") return tok;
+    if (!/[A-Za-z]/.test(head)) {
+      // 纯数字段：N 或 N-M，两端都是星期取值，按源方言→内部→目标方言换算。
+      head = head.split("-").map(function (s) { return remapDowNum(s, srcOne, dstOne); }).join("-");
+    }
+    return head + step;
+  }
+
+  function remapDowRaw(raw, srcOne, dstOne) {
+    if (srcOne === dstOne) return raw;
+    return String(raw).split(",").map(function (t) { return remapDowToken(t.trim(), srcOne, dstOne); }).join(",");
+  }
+
   // 只搬运用户写的原始片段，段数与 ? 按目标方言的必要规则调整，不重排值。
   function convert(spec, targetKey) {
     if (!spec || !spec.ok) return null;
@@ -549,7 +594,7 @@
     if (!target) return null;
 
     var dom = spec.dom.raw.trim();
-    var dow = spec.dow.raw.trim();
+    var dow = remapDowRaw(spec.dow.raw.trim(), spec.format.dowFromOne, target.dowFromOne);
     if (target.allowQuestion) {
       var domConcrete = dom !== "*" && dom !== "?";
       var dowConcrete = dow !== "*" && dow !== "?";
@@ -585,6 +630,46 @@
     return msgs.join("");
   }
 
+  // 预设要落到某个当前格式：能无损表达就给出实际可载入的文本，否则说明置灰原因。
+  // 「无损」的判定：秒位不是纯 0 而目标没有秒字段、年段、L/W/#、日/周并集语义任一出现
+  // 都表达不了；通过之后再折算，并确认折算结果在目标格式下真的能解析——
+  // 否则就会出现「提示的是原文、点下去却报段数错误」这类错位。
+  function presetFit(item, targetKey) {
+    var target = FORMATS[targetKey];
+    var same = item.fmt === targetKey;
+    if (same) return { text: item.expr, disabled: false, reason: "" };
+    var spec = parse(item.expr, item.fmt);
+    if (!spec || !spec.ok) {
+      return { text: "", disabled: true, reason: "预设本身写法有误，无法解析。" };
+    }
+    var reasons = [];
+    // 含秒的预设里只有「秒 = 0」才等于 Linux 每分只跑一次的语义，其它秒级节奏都表达不了。
+    if (spec.sec && spec.sec.raw !== "0" && !target.hasSec) {
+      reasons.push("按秒粒度触发，而 " + target.name + " 没有秒字段，无法原样表达；请切到 Spring 或 Quartz。");
+    }
+    if (spec.hasYear && !target.supportsYear) {
+      reasons.push("带第 7 段年字段，只有 Quartz 能表达，当前 " + target.name + " 无法原样表达。");
+    }
+    var special = spec.dom.domLast || spec.dom.domLastWeekday || spec.dom.domNearest !== null ||
+      spec.dow.dowLast !== null || !!spec.dow.dowNth;
+    if (special && !target.supportsLW) {
+      reasons.push("用了 L / W / #（月末、最后一个周几、最近工作日、第几个周几），" +
+        target.name + " 不支持这类语法；请切到 Spring 或 Quartz。");
+    }
+    if (spec.dayUnion && target.allowQuestion) {
+      reasons.push("日与周同时指定在 " + target.name + " 里只能取交集（需 ? 占位），并集语义无法原样转写。");
+    }
+    if (reasons.length) {
+      return { text: "", disabled: true, reason: reasons.join(" ") };
+    }
+    var c = convert(spec, targetKey);
+    var re = c == null ? null : parse(c, targetKey);
+    if (c == null || !re || !re.ok) {
+      return { text: "", disabled: true, reason: "无法无损折算成 " + target.name + " 写法，请在原格式下使用。" };
+    }
+    return { text: c, disabled: false, reason: "" };
+  }
+
   /* ---------- 预设 ---------- */
 
   var PRESETS = [
@@ -596,7 +681,7 @@
     { group: "按分", items: [
       { expr: "0 * * * * ?", fmt: "quartz", name: "每分钟" },
       { expr: "0 */5 * * * ?", fmt: "quartz", name: "每 5 分钟" },
-      { expr: "0 0,15,30,45 * * * ?", fmt: "quartz", name: "每刻钟" },
+      { expr: "*/15 * * * *", fmt: "linux", name: "每刻钟" },
       { expr: "*/15 9-18 * * 1-5", fmt: "linux", name: "工作时段每 15 分钟" },
     ] },
     { group: "按天", items: [
@@ -604,7 +689,7 @@
       { expr: "0 0 0 * * ?", fmt: "quartz", name: "每天零点" },
       { expr: "0 30 8 * * ?", fmt: "quartz", name: "每天 08:30" },
       { expr: "0 0 2 * * ?", fmt: "quartz", name: "每天 02:00" },
-      { expr: "0 0 * * *", fmt: "linux", name: "每小时（Linux）" },
+      { expr: "0 * * * *", fmt: "linux", name: "每小时（Linux）" },
     ] },
     { group: "按周月", items: [
       { expr: "0 30 9 ? * MON-FRI", fmt: "quartz", name: "工作日 09:30" },
@@ -635,6 +720,7 @@
     summarize: summarize,
     convert: convert,
     convertNotice: convertNotice,
+    presetFit: presetFit,
     isFull: isFull,
     daysInMonth: daysInMonth,
     dowOf: dowOf,

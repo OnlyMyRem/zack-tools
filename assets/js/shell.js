@@ -22,9 +22,34 @@
     return t.content.firstElementChild;
   }
 
+  // 顶栏导航：品牌名右侧画一条竖线，逐个列出注册表里的工具，当前页高亮。
+  // 想跳去别的工具时不用先回首页再点卡片，两个工具之间直接切。
+  var navLinks = [];
+  var allTools = window.ZT_TOOLS || [];
+  for (var i = 0; i < allTools.length; i++) {
+    var t = allTools[i];
+    navLinks.push(
+      '<a class="tool-nav-link' +
+        (page === t.slug ? " is-cur" : "") +
+        '" href="' +
+        window.ztToolHref(t.slug) +
+        '" title="' +
+        t.name +
+        '">' +
+        t.name +
+        "</a>"
+    );
+  }
+  var navHtml = navLinks.length
+    ? '<i class="hang-div" role="separator" aria-hidden="true"></i><nav class="tool-nav" aria-label="工具跳转">' + navLinks.join("") + "</nav>"
+    : "";
+
   var bar = el(
     '<header class="hang-bar">' +
-      '<a class="brand" href="' + homeHref() + '"><span class="mark">&#9678;</span> Zack Tools</a>' +
+      '<div class="hang-left">' +
+        '<a class="brand" href="' + homeHref() + '"><span class="mark">&#9678;</span> Zack Tools</a>' +
+        navHtml +
+      "</div>" +
       '<nav class="top-bar-actions">' +
         '<select id="theme-select" class="theme-select" aria-label="选择主题">' +
           '<option value="system">跟随系统</option>' +
