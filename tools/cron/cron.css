@@ -1,0 +1,443 @@
+/* Cron 工具专属版式。通用件仍在 components.css。 */
+
+/* 与时间戳页同一档宽度：预设栏 + 正文两栏要并排。
+   --rail-w 要装得下一行两个预设 chip，再窄就退成一个 chip 一行。 */
+:root {
+  --content-max: 1292px;
+  --rail-w: 372px;
+}
+
+/* ---------- 两栏骨架 ---------- */
+
+.cron-cols {
+  display: grid;
+  grid-template-columns: var(--rail-w) minmax(0, 1fr);
+  gap: 22px;
+  align-items: start;
+  margin-top: 0;
+}
+
+/* 预设栏在 DOM 里排在正文之后（阅读顺序先看表达式），视觉上放左边。 */
+.cron-main {
+  grid-column: 2;
+  grid-row: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.cron-rail {
+  grid-column: 1;
+  grid-row: 1;
+  position: sticky;
+  top: calc(var(--hang-h) + 18px);
+  align-self: start;
+  min-width: 0;
+}
+
+.cron-rail > .panel,
+.cron-main > .panel:first-child {
+  margin-top: 0;
+}
+
+.rail-note {
+  margin-top: 14px;
+  font-size: 0.72rem;
+  line-height: 1.7;
+  color: var(--muted);
+}
+
+.rail-note b {
+  color: var(--accent-2);
+  font-weight: 600;
+}
+
+/* 窄屏放不下并排两栏，预设栏退回正文下方。 */
+@media (max-width: 1120px) {
+  .cron-cols {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .cron-main,
+  .cron-rail {
+    grid-column: 1;
+    grid-row: auto;
+  }
+
+  .cron-rail {
+    position: static;
+    margin-top: 4px;
+  }
+}
+
+/* ---------- 顶部表达式面板 ---------- */
+
+.top-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 18px 22px;
+}
+
+/* 表达式吃剩余宽度，时区那一栏按内容定宽：两者都是「标签在上、控件在下」。 */
+.expr-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(218px, 300px);
+  gap: 0 18px;
+  align-items: start;
+}
+
+.tz-acts {
+  gap: 8px;
+}
+
+/* 三条方言解释叠在同一格：格子高度取最长那条，切换格式不会把下方内容顶来顶去。
+   visibility:hidden 保留占位，同时把未选中的解释移出无障碍树。 */
+.fmt-hints {
+  display: grid;
+}
+
+.fmt-hints p {
+  grid-area: 1 / 1;
+  visibility: hidden;
+}
+
+.fmt-hints p.on {
+  visibility: visible;
+}
+
+@media (max-width: 720px) {
+  .expr-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 14px 0;
+  }
+}
+
+#expr {
+  font-family: "Cascadia Mono", "JetBrains Mono", Consolas, monospace;
+  font-size: 1.18rem;
+  letter-spacing: 1.5px;
+  padding: 14px 16px;
+}
+
+#expr.invalid {
+  border-color: var(--danger);
+}
+
+/* 表达式下方的分段标签：把每一段对应到「秒/分/时/日/月/周」，
+   段数不同的方言切换时这里会整排重排，避免用户对着下标数段。 */
+.seg-labels {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.seg {
+  flex: 1 1 0;
+  min-width: 62px;
+  text-align: center;
+  padding: 6px 4px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--panel-2);
+}
+
+.seg i {
+  display: block;
+  font-style: normal;
+  font-size: 0.68rem;
+  letter-spacing: 1px;
+  color: var(--muted);
+}
+
+.seg b {
+  display: block;
+  font-family: "Cascadia Mono", Consolas, monospace;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--accent-2);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.seg.empty b {
+  color: var(--done);
+}
+
+/* 预留两行：合法与报错之间的文案长短不再把下方两栏顶来顶去。 */
+#status {
+  min-height: 42px;
+}
+
+.parse-table {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* 每一行各自是一个 grid，所以 raw 那列必须定宽（220px）才能上下对齐；
+   220px 刚好容得下「1,2,3,…,12」这种整年列举，不至于抻成两行。
+   剩余宽度全给中文解释，右栏 ~898px 下不至于排成三段稀疏空列。 */
+.parse-row {
+  display: grid;
+  grid-template-columns: 52px 220px minmax(0, 1fr);
+  gap: 12px;
+  align-items: center;
+  padding: 9px 14px;
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.parse-row .name {
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+  color: var(--muted);
+}
+
+.parse-row .raw {
+  font-family: "Cascadia Mono", Consolas, monospace;
+  font-size: 0.9rem;
+  color: var(--accent-2);
+  word-break: break-all;
+}
+
+.parse-row .mean {
+  font-size: 0.88rem;
+  color: var(--text);
+}
+
+.parse-row.broken {
+  border-color: var(--danger);
+}
+
+/* 字段生成器：一个字段一张卡，卡内是模式切换 + 数值网格。 */
+.builder {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(288px, 1fr));
+}
+
+.bf {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 14px 16px;
+  background: var(--panel);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.bf-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.bf-head h3 {
+  font-size: 0.9rem;
+  font-weight: 640;
+}
+
+.bf-head .range {
+  font-size: 0.7rem;
+  color: var(--muted);
+  font-family: "Cascadia Mono", Consolas, monospace;
+}
+
+.bf-modes {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.mode {
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  color: var(--muted);
+  border-radius: 999px;
+  padding: 4px 12px;
+  font-size: 0.76rem;
+  cursor: pointer;
+  transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
+}
+
+.mode:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.mode.on {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-ink);
+  font-weight: 600;
+}
+
+.bf-step {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.82rem;
+  color: var(--muted);
+}
+
+.bf-step input {
+  width: 74px;
+  padding: 6px 10px;
+  font-size: 0.86rem;
+  font-family: "Cascadia Mono", Consolas, monospace;
+  text-align: center;
+}
+
+.num-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  max-height: 132px;
+  overflow-y: auto;
+  padding: 2px;
+}
+
+.num-grid::-webkit-scrollbar {
+  width: 8px;
+}
+
+.num-grid::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 4px;
+}
+
+.n {
+  flex: 0 0 auto;
+  min-width: 30px;
+  padding: 4px 6px;
+  text-align: center;
+  font-family: "Cascadia Mono", Consolas, monospace;
+  font-size: 0.76rem;
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--muted);
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.12s ease, color 0.12s ease, border-color 0.12s ease;
+}
+
+.n:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.n.on {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-ink);
+  font-weight: 700;
+}
+
+.bf.wide {
+  grid-column: 1 / -1;
+}
+
+.bf.locked {
+  opacity: 0.72;
+}
+
+.lock-note {
+  font-size: 0.76rem;
+  color: var(--danger);
+  line-height: 1.5;
+}
+
+/* 一行的最宽内容（序号 + 19 字符时间 + 「周五 · 下次 -2 小时」 + 内边距）约 316px，
+   所以最小轨给到 330px：宁可两列也不要时间折断。 */
+.times {
+  display: grid;
+  gap: 6px;
+  grid-template-columns: repeat(auto-fill, minmax(330px, 1fr));
+}
+
+.time-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.time-row .idx {
+  flex: none;
+  width: 22px;
+  font-size: 0.72rem;
+  color: var(--done);
+  font-family: "Cascadia Mono", Consolas, monospace;
+}
+
+.time-row .val {
+  flex: 1;
+  min-width: 0;
+  font-family: "Cascadia Mono", Consolas, monospace;
+  font-size: 0.86rem;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.time-row .wd {
+  flex: none;
+  font-size: 0.76rem;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.time-row.next {
+  border-color: var(--accent-2);
+  background: var(--accent-dim);
+}
+
+.preset-groups {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* 预设栏只有 ~330px 内宽：chip 收一档才能一行放下两个，22 个预设不至于叠成一长列。 */
+.cron-rail .preset-groups {
+  gap: 12px;
+}
+
+.cron-rail .chip {
+  padding: 5px 11px;
+  font-size: 0.76rem;
+}
+
+.preset-group .pg-label {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: var(--muted);
+  margin-bottom: 8px;
+}
+
+.table-wrap {
+  overflow-x: auto;
+}
+
+#cheatsheet td:first-child {
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+#cheatsheet code {
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  padding: 1px 5px;
+  font-size: 0.8em;
+  color: var(--accent-2);
+}

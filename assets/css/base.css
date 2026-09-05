@@ -1,0 +1,157 @@
+/* 全站基础层：reset、排版、页面骨架、滚动条、悬停反馈。
+   只放跨工具通用的东西；工具自己的版式留在 tools/<name>/<name>.css 里。 */
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body {
+  min-height: 100%;
+}
+
+html {
+  scrollbar-width: thin;
+}
+
+body {
+  font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+  background: radial-gradient(1200px 600px at 70% -10%, var(--glow) 0%, var(--bg) 62%);
+  color: var(--text);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 100vh;
+  padding: calc(var(--hang-h) + 18px) 16px 20px;
+}
+
+::selection {
+  background: var(--accent-dim);
+  color: var(--text);
+}
+
+a {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+code,
+kbd,
+pre,
+.mono {
+  font-family: "Cascadia Mono", "JetBrains Mono", Consolas, "Courier New", monospace;
+  font-variant-ligatures: none;
+}
+
+pre {
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+button {
+  font-family: inherit;
+}
+
+/* 顶栏：品牌位 + 右侧动作位，与内容同宽。 */
+.hang-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: var(--hang-h);
+  z-index: 70;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 0 16px;
+  background: var(--hang-bg);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--border);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.92rem;
+  font-weight: 600;
+  letter-spacing: 0.4px;
+  color: var(--text);
+  white-space: nowrap;
+}
+
+.brand:hover {
+  text-decoration: none;
+  color: var(--accent);
+}
+
+.brand .mark {
+  color: var(--accent-2);
+  font-weight: 700;
+}
+
+.top-bar-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* 内容列宽由 --content-max 统一控制，宽屏工具可在自己的 css 里覆写。 */
+.wrap {
+  width: 100%;
+  max-width: var(--content-max);
+  display: flex;
+  flex-direction: column;
+}
+
+.page-head {
+  margin-top: 20px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid var(--border);
+}
+
+.page-desc {
+  margin-top: 8px;
+  font-size: 0.88rem;
+  line-height: 1.65;
+  color: var(--muted);
+}
+
+.crumb {
+  margin-bottom: 14px;
+  font-size: 0.78rem;
+  color: var(--muted);
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.crumb a {
+  color: var(--muted);
+}
+
+.crumb a:hover {
+  color: var(--accent);
+}
+
+/* 页头标题块删掉之后，面包屑末尾这一项就是本页可见的标题：留 h1 的语义，字号收在一行里。 */
+.crumb .crumb-cur {
+  font-size: 0.95rem;
+  font-weight: 650;
+  letter-spacing: 0.3px;
+  color: var(--text);
+}
+
+@media (max-width: 560px) {
+  body {
+    padding: calc(var(--hang-h) + 14px) 12px 24px;
+  }
+}

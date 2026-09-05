@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>时间戳转换 · Zack Tools</title>
+<meta name="description" content="在线 Unix 时间戳转换工具：时间戳与日期时间双向换算，默认中国上海时区并可按定位获取，支持任意 IANA 时区，自动识别 10 位与 13 位时间戳，日 / 年月常用基准时间一键取值。">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><text y='25' font-size='25'>%E2%8F%B1</text></svg>">
+<link rel="stylesheet" href="../../assets/css/theme.css">
+<link rel="stylesheet" href="../../assets/css/base.css">
+<link rel="stylesheet" href="../../assets/css/components.css">
+<link rel="stylesheet" href="timestamp.css">
+<script src="../../assets/js/registry.js" data-registry></script>
+<script src="../../assets/js/theme.js"></script>
+</head>
+<body data-page="timestamp">
+<main class="wrap">
+  <div class="ts-cols">
+    <div class="ts-main">
+      <section class="panel top-panel">
+        <div class="tz-grid">
+          <div class="field">
+            <div class="tz-label-row">
+              <label class="field-label" for="tz">目标时区</label>
+              <button class="tz-locate" type="button" id="tz-locate" title="向浏览器请求地理位置，按最近的代表城市推测时区">按定位获取</button>
+            </div>
+            <select id="tz"></select>
+          </div>
+          <div class="field">
+            <span class="field-label">该时区当前时间</span>
+            <div class="tz-now" id="tz-now-row">
+              <span class="mono tv" id="tz-now">—</span>
+              <span class="tz-meta" id="tz-now-meta"></span>
+              <button class="copy" type="button" data-copy="tz-now">复制</button>
+            </div>
+          </div>
+        </div>
+        <div class="row now-head">
+          <span class="field-label">当前时间戳</span>
+          <span class="hint">实时走动</span>
+          <div class="chips" id="now-quick">
+            <button class="chip" type="button" data-fill="sec">填入下方秒级</button>
+            <button class="chip" type="button" data-fill="ms">填入下方毫秒级</button>
+            <button class="chip" type="button" data-fill="wall">填入下方日期</button>
+          </div>
+        </div>
+        <div class="grid">
+          <div class="stat-card">
+            <b id="now-sec">—</b>
+            <span>秒级 · 10 位</span>
+            <button class="copy" type="button" data-copy="now-sec">复制</button>
+          </div>
+          <div class="stat-card">
+            <b id="now-ms">—</b>
+            <span>毫秒级 · 13 位</span>
+            <button class="copy" type="button" data-copy="now-ms">复制</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- 两块互转并排放首屏：打开页面不必下滑就能同时看到输入与结果。 -->
+      <div class="ts-duo">
+        <section class="panel">
+          <div class="panel-head">
+            <h2>时间戳 &rarr; 日期时间</h2>
+            <span class="hint">10/13 位自动识别</span>
+          </div>
+          <div class="panel-body">
+            <div class="row grow-last">
+              <div class="field grow">
+                <label class="field-label" for="ts-input">时间戳</label>
+                <input id="ts-input" type="text" inputmode="numeric" autocomplete="off" placeholder="1788000000" value="">
+              </div>
+              <div class="field">
+                <label class="field-label" for="ts-unit">单位</label>
+                <select id="ts-unit">
+                  <option value="auto">自动识别</option>
+                  <option value="s">秒（10 位）</option>
+                  <option value="ms">毫秒（13 位）</option>
+                </select>
+              </div>
+            </div>
+            <p class="note" id="ts-src-note"></p>
+            <div class="kv" id="ts-main-row">
+              <span class="kv-label">日期时间</span>
+              <span class="kv-value em" id="ts-datetime">等待输入</span>
+              <button class="copy" type="button" data-copy="ts-datetime">复制</button>
+            </div>
+            <div class="facts">
+              <div class="kv"><span class="kv-label">星期</span><span class="kv-value" id="ts-weekday">—</span><button class="copy" type="button" data-copy="ts-weekday">复制</button></div>
+              <div class="kv"><span class="kv-label">ISO 8601</span><span class="kv-value" id="ts-iso">—</span><button class="copy" type="button" data-copy="ts-iso">复制</button></div>
+              <div class="kv"><span class="kv-label">UTC 时刻</span><span class="kv-value" id="ts-utc">—</span><button class="copy" type="button" data-copy="ts-utc">复制</button></div>
+              <div class="kv"><span class="kv-label">RFC 2822</span><span class="kv-value" id="ts-rfc">—</span><button class="copy" type="button" data-copy="ts-rfc">复制</button></div>
+              <div class="kv"><span class="kv-label">毫秒级</span><span class="kv-value" id="ts-ms">—</span><button class="copy" type="button" data-copy="ts-ms">复制</button></div>
+              <div class="kv"><span class="kv-label">秒级</span><span class="kv-value" id="ts-s">—</span><button class="copy" type="button" data-copy="ts-s">复制</button></div>
+              <div class="kv"><span class="kv-label">距今</span><span class="kv-value" id="ts-relative">—</span></div>
+              <div class="kv"><span class="kv-label">年内第几天</span><span class="kv-value" id="ts-doy">—</span></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-head">
+            <h2>日期时间 &rarr; 时间戳</h2>
+            <span class="hint">按所选时区解释</span>
+          </div>
+          <div class="panel-body">
+            <div class="field">
+              <label class="field-label" for="wall-input">日期时间</label>
+              <div class="wall-box">
+                <input id="wall-input" type="text" autocomplete="off" placeholder="2026-09-04 21:30:00" value="">
+                <span class="cal" id="wall-cal" title="用日历选择器挑日期时间">
+                  <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
+                    <rect x="3" y="5" width="18" height="16" rx="2"></rect>
+                    <path d="M3 10h18M8 3v4M16 3v4"></path>
+                  </svg>
+                  <input id="wall-picker" type="datetime-local" step="1" tabindex="-1" aria-label="日历选择器">
+                </span>
+              </div>
+            </div>
+            <div class="row shift-row">
+              <button class="btn sm" type="button" id="wall-now">现在</button>
+              <button class="btn sm" type="button" data-shift="-86400000">-1 天</button>
+              <button class="btn sm" type="button" data-shift="86400000">+1 天</button>
+              <button class="btn sm" type="button" data-shift="-3600000">-1 小时</button>
+              <button class="btn sm" type="button" data-shift="3600000">+1 小时</button>
+            </div>
+            <p class="note" id="wall-note"></p>
+            <div class="facts">
+              <div class="kv"><span class="kv-label">秒级 (10)</span><span class="kv-value em" id="wall-sec">—</span><button class="copy" type="button" data-copy="wall-sec">复制</button></div>
+              <div class="kv"><span class="kv-label">毫秒级 (13)</span><span class="kv-value em" id="wall-ms">—</span><button class="copy" type="button" data-copy="wall-ms">复制</button></div>
+              <div class="kv"><span class="kv-label">ISO 8601</span><span class="kv-value" id="wall-iso">—</span><button class="copy" type="button" data-copy="wall-iso">复制</button></div>
+              <div class="kv"><span class="kv-label">回读校验</span><span class="kv-value" id="wall-echo">—</span></div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+
+    <aside class="ts-rail" aria-label="常用基准时间">
+      <div class="rail-head">
+        <h2>常用基准时间</h2>
+        <span class="hint">按所选时区计算</span>
+      </div>
+      <div id="base-groups"></div>
+      <p class="rail-note">
+        两组基准时间：<b>日</b> = 今天的时 + 分；<b>年月</b>按「年份 → 月份 → 该月哪一天」三级各自可选，
+        选中即给出时间戳。「第 N 周周一」取该月第 N 个周一。未手动改动的一组会自动停在<b>最近一个</b>已发生的时刻。
+      </p>
+    </aside>
+  </div>
+</main>
+<script src="../../assets/js/time.js"></script>
+<script src="../../assets/js/utils.js"></script>
+<script src="../../assets/js/shell.js"></script>
+<script src="timestamp.js"></script>
+</body>
+</html>

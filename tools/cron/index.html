@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cron 表达式生成与解析 · Zack Tools</title>
+<meta name="description" content="在线 Cron 表达式工具：可视化生成表达式，自动识别 Spring / Quartz / Linux 三种格式，逐字段中文解析，按任意时区预览未来触发时间。">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><text y='25' font-size='25'>%F0%9F%97%93</text></svg>">
+<link rel="stylesheet" href="../../assets/css/theme.css">
+<link rel="stylesheet" href="../../assets/css/base.css">
+<link rel="stylesheet" href="../../assets/css/components.css">
+<link rel="stylesheet" href="cron.css">
+<script src="../../assets/js/registry.js" data-registry></script>
+<script src="../../assets/js/theme.js"></script>
+</head>
+<body data-page="cron">
+<main class="wrap">
+  <div class="cron-cols">
+    <div class="cron-main">
+      <section class="panel top-panel">
+        <div class="expr-grid">
+          <div class="field">
+            <label class="field-label" for="expr">表达式</label>
+            <input id="expr" type="text" autocomplete="off" spellcheck="false" placeholder="0 0 3 ? * MON-FRI">
+            <div class="seg-labels" id="seg-labels" aria-hidden="true"></div>
+          </div>
+          <div class="field">
+            <label class="field-label" for="tz">推算时区</label>
+            <select id="tz"></select>
+            <div class="row tz-acts">
+              <button class="btn sm" type="button" id="btn-copy-expr">复制表达式</button>
+              <button class="btn sm ghost" type="button" id="btn-clear">清空</button>
+            </div>
+          </div>
+        </div>
+        <div class="field">
+          <label class="field-label">格式</label>
+          <div class="chips" id="format-chips" role="radiogroup" aria-label="Cron 格式"></div>
+        </div>
+        <div class="fmt-hints" id="fmt-hints"></div>
+        <p class="note" id="status"></p>
+        <div class="desc-line" id="summary">等待输入表达式。</div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-head">
+          <h2>未来触发时间</h2>
+          <div class="row">
+            <label class="field-label" for="count">次数</label>
+            <select id="count" style="width:auto">
+              <option value="5">5</option>
+              <option value="10" selected>10</option>
+              <option value="20">20</option>
+              <option value="50">50</option>
+            </select>
+            <button class="btn sm" type="button" id="btn-copy-times">复制全部</button>
+          </div>
+        </div>
+        <div class="times" id="times"></div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-head">
+          <h2>逐字段解析</h2>
+          <span class="hint">表达式合法后逐段解释</span>
+        </div>
+        <div class="parse-table" id="parse-table"></div>
+      </section>
+    </div>
+
+    <aside class="cron-rail" aria-label="常用预设">
+      <section class="panel">
+        <div class="panel-head">
+          <h2>常用预设</h2>
+          <span class="hint">点击载入</span>
+        </div>
+        <div class="preset-groups" id="presets"></div>
+        <p class="rail-note">
+          预设按它原本的方言写好，点一下会顺带切到对应格式。
+          <b>Linux</b> 的条目没有秒位，载入后段数会少一段。
+        </p>
+      </section>
+    </aside>
+  </div>
+
+  <section class="panel">
+    <div class="panel-head">
+      <h2>字段生成器</h2>
+      <span class="hint">点这里的控件会同步上方表达式</span>
+    </div>
+    <div class="builder" id="builder"></div>
+  </section>
+
+  <section class="panel">
+    <div class="panel-head">
+      <h2>字段速查</h2>
+      <span class="hint">三种方言的差异</span>
+    </div>
+    <div class="table-wrap">
+      <table class="tbl" id="cheatsheet">
+        <thead>
+          <tr><th>字段</th><th>取值</th><th>特殊符号</th><th>说明</th></tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </section>
+</main>
+<script src="../../assets/js/time.js"></script>
+<script src="../../assets/js/utils.js"></script>
+<script src="../../assets/js/shell.js"></script>
+<script src="cron-parser.js"></script>
+<script src="cron.js"></script>
+</body>
+</html>

@@ -1,0 +1,83 @@
+/* 主题色板：三套主题的 token 与取值完全对齐 ChronosFit（E:\chronos-fit）。
+   类名挂在 <html> 而不是 body 上：:root 即深色默认值，浅色家族挂 html.light，
+   护眼在 html.light 之上再挂 html.eye 只换色板，因此浅底共用规则不必重写。
+   挂根元素的好处是 theme.js 能在 <head> 里就把主题落地，首屏不会先画一帧
+   深色再跳浅色，省掉 ChronosFit 那套 .ready 首屏遮罩。
+   新增主题请照这个顺序追加，靠源码顺序覆盖同权重规则。 */
+
+:root {
+  color-scheme: dark;
+  /* Soft monochrome dark — warm charcoal background, no pure black/white punches. */
+  --bg:        #121316;
+  --panel:     #1a1b20;
+  --panel-2:   #24252c;
+  --border:    #33353f;
+  --text:      #d7d9df;
+  --muted:     #8b8f9a;
+  --accent:    #e7e8ec;
+  --accent-dim: rgba(231, 232, 236, 0.10);
+  --accent-2:  #c9a24c;
+  --done:      #5a5d66;
+  --danger:    #e37676;
+  --success:   #2f7d52;
+  --success-strong: #38915f;
+  --success-ink: #eaf5ee;
+  --accent-ink: #121316;
+  --content-max: 800px;
+  --hang-h: 48px;
+  --hang-bg: rgba(18, 19, 22, 0.86);
+  --shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+  --radius: 10px;
+  --radius-lg: 16px;
+  --glow: #1d1f27;
+}
+
+html.light {
+  color-scheme: light;
+  --bg: #f5f5f5;
+  --panel: #ffffff;
+  --panel-2: #f0f0f0;
+  --border: #d4d4d4;
+  --text: #1a1a1a;
+  --muted: #6b7280;
+  --accent: #2563eb;
+  --accent-dim: rgba(37, 99, 235, 0.10);
+  --accent-2: #d97706;
+  --done: #a3a3a3;
+  --danger: #ef4444;
+  --success: #15803d;
+  --success-ink: #f2fbf5;
+  --accent-ink: #ffffff;
+  --hang-bg: rgba(245, 245, 245, 0.86);
+  --shadow: 0 20px 60px rgba(0, 0, 0, 0.18);
+  --glow: #dbeafe;
+}
+
+html.light {
+  background: radial-gradient(1200px 600px at 70% -10%, var(--glow) 0%, var(--bg) 60%);
+}
+
+/* 护眼：暖米纸色，取自 analogueclock.com 的色板。 */
+html.eye {
+  --bg:        #f4efe4;
+  --panel:     #fbf7ee;
+  --panel-2:   #e9e2d3;
+  --border:    #d8cfbd;
+  --text:      #2b2419;
+  --muted:     #6c6158;
+  --accent:    #7d4a06;
+  --accent-dim: rgba(122, 74, 6, 0.10);
+  --accent-2:  #96660f;
+  --done:      #b7ab95;
+  --danger:    #b3402f;
+  --success:   #3f842e;
+  --success-ink: #f4f8ee;
+  --accent-ink: #fffdf8;
+  --hang-bg: rgba(244, 239, 228, 0.86);
+  --shadow: 0 20px 60px rgba(80, 60, 20, 0.16);
+  --glow: #e7dfcc;
+}
+
+html.eye {
+  background: radial-gradient(1200px 600px at 70% -10%, var(--glow) 0%, var(--bg) 60%);
+}

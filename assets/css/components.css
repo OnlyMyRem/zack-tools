@@ -1,0 +1,509 @@
+/* 通用组件层：从 ChronosFit 的 style.css 里提炼出与业务无关的那部分，
+   保持同样的圆角、描边、focus 光环和 hover 反馈，新工具直接复用这些类名。 */
+
+.icon-btn {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--accent);
+  width: 38px;
+  height: 38px;
+  border-radius: var(--radius);
+  font-size: 1.1rem;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.icon-btn:hover {
+  border-color: var(--accent);
+  background: var(--accent-dim);
+}
+
+.icon-btn:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.icon-btn:disabled:hover {
+  border-color: var(--border);
+  background: transparent;
+}
+
+.icon-btn.text-icon-btn {
+  width: auto;
+  min-width: 38px;
+  padding: 0 12px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  gap: 6px;
+}
+
+/* 顶栏的主题下拉要塞进 38px 高的工具条：去掉 100% 宽度，按内容收缩并与按钮等高。
+   窄屏隐藏它，循环切换按钮仍在，不至于没有换主题的入口。 */
+.theme-select {
+  width: auto;
+  height: 38px;
+  padding: 0 30px 0 12px;
+  font-size: 0.82rem;
+  border-radius: var(--radius);
+  background-position: calc(100% - 14px) calc(50% + 1px), calc(100% - 9px) calc(50% + 1px);
+}
+
+@media (max-width: 640px) {
+  .theme-select {
+    display: none;
+  }
+}
+
+.panel {
+  width: 100%;
+  margin-top: 24px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 20px 22px;
+}
+
+.panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding-bottom: 14px;
+  margin-bottom: 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.panel-head h2 {
+  font-size: 1rem;
+  font-weight: 640;
+  letter-spacing: 0.3px;
+}
+
+.panel-head .hint {
+  font-size: 0.76rem;
+  color: var(--muted);
+}
+
+.panel-body {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.grid {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+}
+
+.grid.cols-2 {
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.row.grow-last > :last-child {
+  flex: 1;
+  min-width: 160px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.field-label {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: var(--muted);
+}
+
+/* 全站表单基线：除自定义 checkbox 外全部吃主题变量，避免夜间模式下露出 UA 白底。 */
+input:not([type="checkbox"]):not([type="radio"]),
+textarea,
+select {
+  width: 100%;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: var(--radius);
+  padding: 10px 12px;
+  font-size: 0.95rem;
+  outline: none;
+  font-family: inherit;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+input:not([type="checkbox"]):not([type="radio"]):focus,
+textarea:focus,
+select:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-dim);
+}
+
+input.invalid,
+textarea.invalid {
+  border-color: var(--danger);
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--done);
+}
+
+textarea {
+  resize: vertical;
+  min-height: 76px;
+  line-height: 1.6;
+}
+
+select {
+  cursor: pointer;
+  appearance: none;
+  background-image: linear-gradient(45deg, transparent 50%, var(--muted) 50%),
+    linear-gradient(135deg, var(--muted) 50%, transparent 50%);
+  background-position: calc(100% - 16px) calc(50% + 1px), calc(100% - 11px) calc(50% + 1px);
+  background-size: 5px 5px, 5px 5px;
+  background-repeat: no-repeat;
+  padding-right: 32px;
+}
+
+/* 数字输入去掉 UA 上下箭头，深色下太突兀，步进交给按钮。 */
+input[type="number"] {
+  appearance: textfield;
+  -moz-appearance: textfield;
+}
+
+.btn {
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  color: var(--accent);
+  font-weight: 600;
+  border-radius: var(--radius);
+  padding: 10px 18px;
+  cursor: pointer;
+  font-size: 0.88rem;
+  white-space: nowrap;
+  transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
+}
+
+.btn:hover {
+  border-color: var(--accent);
+  background: var(--accent-dim);
+}
+
+.btn:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.btn:disabled:hover {
+  border-color: var(--border);
+  background: var(--panel-2);
+}
+
+.btn.primary {
+  background: var(--accent);
+  color: var(--accent-ink);
+  border-color: var(--accent);
+}
+
+.btn.primary:hover {
+  background: var(--accent);
+  border-color: var(--accent);
+  filter: brightness(1.08);
+}
+
+.btn.sm {
+  padding: 6px 12px;
+  font-size: 0.78rem;
+  border-radius: 8px;
+}
+
+.btn.ghost {
+  background: transparent;
+}
+
+.chip {
+  flex: none;
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 7px 16px;
+  font-size: 0.84rem;
+  color: var(--text);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
+  user-select: none;
+}
+
+.chip:hover {
+  border-color: var(--accent);
+  background: var(--accent-dim);
+  color: var(--accent);
+}
+
+.chip.active {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-weight: 600;
+}
+
+.chips {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* 结果行：标签 + 等宽值 + 复制按钮，是这两个工具最高频的展示单元。 */
+.kv {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 14px;
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.kv-label {
+  flex: none;
+  width: 108px;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  color: var(--muted);
+}
+
+.kv-value {
+  flex: 1;
+  min-width: 0;
+  font-family: "Cascadia Mono", "JetBrains Mono", Consolas, monospace;
+  font-size: 0.95rem;
+  color: var(--text);
+  word-break: break-all;
+}
+
+.kv-value.em {
+  color: var(--accent-2);
+  font-weight: 600;
+}
+
+.kv .copy {
+  flex: none;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--muted);
+  padding: 4px 10px;
+  font-size: 0.72rem;
+  cursor: pointer;
+  transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
+}
+
+.kv .copy:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--accent-dim);
+}
+
+.kv .copy.ok {
+  border-color: var(--success);
+  color: var(--success);
+}
+
+.stat-card {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 14px 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--panel-2);
+}
+
+.stat-card b {
+  font-size: 1.5rem;
+  line-height: 1.15;
+  font-family: "Cascadia Mono", "JetBrains Mono", Consolas, monospace;
+  font-weight: 600;
+}
+
+.stat-card span {
+  font-size: 0.72rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.note {
+  font-size: 0.82rem;
+  line-height: 1.6;
+  color: var(--muted);
+}
+
+.note.error {
+  color: var(--danger);
+}
+
+.note.ok {
+  color: var(--success);
+}
+
+.desc-line {
+  padding: 12px 14px;
+  border-left: 3px solid var(--accent-2);
+  background: var(--panel-2);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  font-size: 0.92rem;
+  line-height: 1.7;
+}
+
+table.tbl {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.86rem;
+}
+
+table.tbl th,
+table.tbl td {
+  text-align: left;
+  padding: 9px 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+table.tbl th {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+table.tbl td.mono {
+  font-family: "Cascadia Mono", "JetBrains Mono", Consolas, monospace;
+}
+
+table.tbl tr:last-child td {
+  border-bottom: none;
+}
+
+table.tbl tbody tr:hover td {
+  background: var(--accent-dim);
+}
+
+dialog {
+  position: fixed;
+  inset: 0;
+  margin: auto;
+  background: var(--panel);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 22px 24px;
+  width: min(480px, 92vw);
+  max-height: 86vh;
+  overflow-y: auto;
+  box-shadow: var(--shadow);
+}
+
+dialog::backdrop {
+  background: rgba(0, 0, 0, 0.62);
+  backdrop-filter: blur(12px) saturate(0.72);
+  -webkit-backdrop-filter: blur(12px) saturate(0.72);
+}
+
+html.light dialog::backdrop {
+  background: rgba(248, 248, 248, 0.66);
+}
+
+/* 顶部轻提示：复制成功、校验失败等短反馈。 */
+#toast {
+  position: fixed;
+  left: 50%;
+  bottom: 32px;
+  transform: translate(-50%, 12px);
+  z-index: 90;
+  background: var(--panel);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 9px 20px;
+  font-size: 0.84rem;
+  box-shadow: var(--shadow);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.22s ease, transform 0.22s ease;
+}
+
+#toast.show {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
+#toast.err {
+  border-color: var(--danger);
+  color: var(--danger);
+}
+
+/* 复选框：沿用 ChronosFit 的自绘勾选，避免 UA 默认样式在三种主题下不一致。 */
+.check {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.86rem;
+  cursor: pointer;
+  user-select: none;
+}
+
+.check input {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 18px;
+  height: 18px;
+  flex: none;
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  background: var(--panel);
+  cursor: pointer;
+  position: relative;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.check input:checked {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+.check input:checked::after {
+  content: "";
+  position: absolute;
+  left: 5px;
+  top: 1px;
+  width: 5px;
+  height: 10px;
+  border: solid var(--accent-ink);
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition-duration: 0.01ms !important;
+  }
+}

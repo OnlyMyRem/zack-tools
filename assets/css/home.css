@@ -1,0 +1,159 @@
+/* 首页专属版式：hero 与工具卡片。通用件仍在 components.css。 */
+
+:root {
+  --content-max: 940px;
+}
+
+.hero {
+  padding-bottom: 26px;
+}
+
+.hero-title {
+  font-size: 2rem;
+  font-weight: 680;
+  letter-spacing: 0.5px;
+  line-height: 1.2;
+}
+
+.hero .page-desc {
+  max-width: 62ch;
+  font-size: 0.94rem;
+}
+
+.hero-meta {
+  margin-top: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.hero-meta .dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--success-strong, var(--success));
+  box-shadow: 0 0 0 3px rgba(47, 125, 82, 0.18);
+}
+
+.hero-meta .sep {
+  color: var(--done);
+}
+
+.tool-grid {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
+}
+
+.tool-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 20px;
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  color: var(--text);
+  text-decoration: none;
+  transition: border-color 0.16s ease, transform 0.16s ease, background 0.16s ease;
+}
+
+.tool-card:hover {
+  border-color: var(--accent);
+  background: var(--accent-dim);
+  transform: translateY(-2px);
+  text-decoration: none;
+}
+
+.tool-card:focus-visible {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-dim);
+}
+
+.tool-card-top {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.tool-icon {
+  width: 42px;
+  height: 42px;
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  border-radius: 12px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+}
+
+.tool-card h3 {
+  font-size: 1.02rem;
+  font-weight: 640;
+}
+
+.tool-card .slug {
+  font-size: 0.72rem;
+  color: var(--muted);
+  font-family: "Cascadia Mono", Consolas, monospace;
+}
+
+.tool-card p {
+  font-size: 0.86rem;
+  line-height: 1.7;
+  color: var(--muted);
+  flex: 1;
+}
+
+.tool-card .tags {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.tool-card .tag {
+  font-size: 0.7rem;
+  letter-spacing: 0.4px;
+  color: var(--accent-2);
+  border: 1px solid var(--border);
+  background: var(--panel);
+  border-radius: 999px;
+  padding: 2px 10px;
+}
+
+.tool-card .go {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--accent);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.code-block {
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px 18px;
+  font-size: 0.82rem;
+  line-height: 1.75;
+  color: var(--text);
+  overflow-x: auto;
+}
+
+.note code,
+.page-desc code,
+.desc-line code {
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  padding: 1px 5px;
+  font-size: 0.86em;
+  color: var(--accent-2);
+}

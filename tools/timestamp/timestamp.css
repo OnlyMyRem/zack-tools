@@ -1,0 +1,817 @@
+/* 时间戳工具专属版式。跨工具通用的 .panel / .kv / .chip 等在 components.css。 */
+
+/* 左栏沿用原来的阅读宽度，右侧多留一栏基准时间。
+   --control-h 对齐 components.css 里 input / select 的默认高度：
+   10px 内边距 ×2 + 1px 边框 ×2 + 0.95rem 字高。 */
+:root {
+  --content-max: 1292px;
+  --rail-w: 330px;
+  --control-h: 42px;
+}
+
+/* 左栏的第一块面板：目标时区 + 当前时间戳合并成一条顶部信息带，
+   列间距由 .ts-cols 负责，这里不再叠一层 margin。 */
+.top-panel {
+  margin-top: 0;
+  padding: 16px 22px;
+}
+
+/* 两列都是「标签在上、控件在下」的 field：标签行同高所以控件顶边齐平，
+   再用同一个 --control-h 把底边也拉齐，不必拿 padding 互相凑。 */
+.tz-grid {
+  display: grid;
+  grid-template-columns: minmax(220px, 320px) minmax(0, 1fr);
+  gap: 0 18px;
+  align-items: start;
+}
+
+.tz-grid select,
+.tz-now {
+  min-height: var(--control-h);
+}
+
+.tz-label-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.tz-locate {
+  background: none;
+  border: 0;
+  padding: 0;
+  font-family: inherit;
+  font-size: 0.72rem;
+  letter-spacing: 0.5px;
+  color: var(--accent);
+  cursor: pointer;
+}
+
+.tz-locate:hover {
+  text-decoration: underline;
+}
+
+.tz-locate:disabled {
+  color: var(--done);
+  cursor: default;
+  text-decoration: none;
+}
+
+.tz-now {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.84rem;
+  color: var(--muted);
+  padding: 0 8px 0 12px;
+  border: 1px dashed var(--border);
+  border-radius: var(--radius);
+}
+
+/* 省略号只落在 .tz-meta 上：.tv 是被复制的那个值，窄屏也不能缺一角。 */
+.tz-now .tv {
+  flex: none;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+
+.tz-now .tz-meta {
+  flex: 1 1 auto;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tz-now .copy {
+  flex: none;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--muted);
+  padding: 3px 10px;
+  font-size: 0.7rem;
+  cursor: pointer;
+  transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
+}
+
+.tz-now .copy:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--accent-dim);
+}
+
+.tz-now .copy.ok {
+  border-color: var(--success);
+  color: var(--success);
+}
+
+@media (max-width: 640px) {
+  .tz-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 12px 0;
+  }
+}
+
+/* 641~760px 这一段最难塞：基准栏已堆到下面，.tz-grid 却还是两列，右列只剩 ~215px。
+   让下拉列先退 68px，给「完整日期时间 + 复制按钮」腾出第一行。 */
+@media (max-width: 760px) and (min-width: 641px) {
+  .tz-grid {
+    grid-template-columns: minmax(200px, 252px) minmax(0, 1fr);
+  }
+}
+
+/* 元信息（星期 · 偏移 · 时区 ID）在第一行塞不下时，整条挪到虚线框里的第二行，
+   而不是用省略号把时区 ID 咬掉半截：复制按钮紧贴它要复制的那串数字，元信息自己占一行。
+   两个标记都由 timestamp.js 的 fitTzMeta() 按实测宽度加：第二行仍放不下时 .no-zone 把 ID 整段省掉。 */
+.tz-now.tight {
+  flex-wrap: wrap;
+}
+
+.tz-now.tight .tz-meta {
+  order: 3;
+  flex: 1 1 100%;
+}
+
+.tz-now.tight .copy {
+  order: 2;
+}
+
+.tz-meta.no-zone .zn {
+  display: none;
+}
+
+/* 两张实时卡片并排，数值用等宽 + 表格数字，跳动时列宽不抖。 */
+.stat-card {
+  position: relative;
+}
+
+.stat-card b {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.5px;
+  word-break: break-all;
+}
+
+.stat-card b.tight {
+  font-size: 1.06rem;
+  letter-spacing: 0;
+}
+
+.stat-card .copy {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--muted);
+  padding: 3px 10px;
+  font-size: 0.7rem;
+  cursor: pointer;
+  transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
+}
+
+.stat-card .copy:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--accent-dim);
+}
+
+.stat-card .copy.ok {
+  border-color: var(--success);
+  color: var(--success);
+}
+
+/* 顶部信息带内的分隔：虚线 + 一点呼吸，替掉原来第二块面板的标题行。
+   「填入下方」的快捷按钮并到同一行右侧，纵向少占一整行。 */
+.now-head {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px dashed var(--border);
+}
+
+.now-head .chips {
+  margin-left: auto;
+}
+
+.now-head .chip {
+  padding: 5px 12px;
+  font-size: 0.78rem;
+}
+
+/* 「填入下方」三枚按钮的落点动画：数字从按钮里跳起、划一道弧线落进下方输入框，
+   落定再给框一圈高亮。起点终点都由 JS 按当下位置现算，这里只管长相。 */
+.fly {
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 80;
+  pointer-events: none;
+  padding: 5px 12px;
+  border-radius: 999px;
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-size: 0.82rem;
+  white-space: nowrap;
+  box-shadow: var(--shadow);
+  transform-origin: 10px 50%;
+}
+
+@keyframes tsLand {
+  from {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 4px var(--accent-dim);
+  }
+
+  to {
+    border-color: var(--border);
+    box-shadow: 0 0 0 4px rgba(0, 0, 0, 0);
+  }
+}
+
+input.landed {
+  animation: tsLand 0.75s ease-out;
+}
+
+/* 要求减少动效的用户只看到值落进框里（外加 toast），不跟着闪一圈。 */
+@media (prefers-reduced-motion: reduce) {
+  input.landed {
+    animation: none;
+  }
+}
+
+.top-panel .grid {
+  margin-top: 12px;
+}
+
+#ts-input,
+#wall-input {
+  font-family: "Cascadia Mono", "JetBrains Mono", Consolas, monospace;
+  font-size: 1.02rem;
+  letter-spacing: 0.6px;
+}
+
+#ts-input.invalid,
+#wall-input.invalid {
+  border-color: var(--danger);
+}
+
+#ts-unit {
+  width: 148px;
+}
+
+/* 日历按钮紧贴输入框右边：透明的原生 datetime-local 铺满整块按钮，
+   点按钮任意位置都命中选择器，页面上因此只剩一处日期显示。 */
+.wall-box {
+  display: flex;
+}
+
+.wall-box #wall-input {
+  flex: 1;
+  min-width: 0;
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.cal {
+  position: relative;
+  flex: none;
+  width: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  border-left: 0;
+  border-radius: 0 var(--radius) var(--radius) 0;
+  color: var(--muted);
+  cursor: pointer;
+  transition: color 0.15s ease, background 0.15s ease, border-color 0.15s ease;
+}
+
+.cal:hover {
+  color: var(--accent);
+  background: var(--accent-dim);
+  border-color: var(--accent);
+}
+
+.wall-box:focus-within .cal {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+.cal input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  border: 0;
+  padding: 0;
+  background: none;
+  cursor: pointer;
+}
+
+/* ---------- 右侧基准栏 ---------- */
+
+/* 两栏并排的骨架：基准栏整块顶头，与左栏第一块面板顶边齐平，
+   只留常规板块间距（与 cron 页同一套版式）。 */
+.ts-cols {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) var(--rail-w);
+  gap: 22px;
+  align-items: start;
+  margin-top: 0;
+}
+
+.ts-main {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+/* 两块互转并排吃满首屏：放不下两栏就退回一栏。
+   下限 430px 是两头凑出来的——再宽一点 1280 的笔记本就不并排了，再窄一点最长的结果值塞不下。 */
+.ts-duo {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 430px), 1fr));
+  gap: 22px;
+  margin-top: 16px;
+}
+
+.ts-duo > .panel {
+  margin-top: 0;
+}
+
+/* 输入行分工：文本框吃剩余，单位与原生选择器按内容占宽。 */
+.row > .field {
+  flex: none;
+}
+
+.row > .field.grow {
+  flex: 1 1 190px;
+  min-width: 0;
+}
+
+.ts-duo .shift-row {
+  gap: 6px;
+}
+
+/* 结果行：标签 + 值 + 复制挤在一行里，值不许折断，所以字号与内边距都收紧一档。
+   最长的一条永远是 RFC 2822（定长 31 字符，含 LMT 那种带秒的偏移约 252px），
+   加标签 / 间距 / 复制按钮约需 370px，所以分栏下限取 392px：
+   宁可退回单栏把值摊开，也不让它凑成两栏后被省略号咬掉。 */
+.facts {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(392px, 100%), 1fr));
+  gap: 8px;
+}
+
+.facts .kv {
+  gap: 8px;
+  padding: 7px 10px;
+}
+
+/* 标签列定宽：两栏面板里的结果行对齐成一张表，标签右缘、值起点、复制按钮右缘各在一条竖线上。 */
+.facts .kv-label {
+  width: 76px;
+  flex: none;
+  font-size: 0.66rem;
+  letter-spacing: 0.6px;
+  text-align: right;
+}
+
+/* nowrap 的值遇到 America/North_Dakota/New_Salem 这类长时区 ID 会撑出整页横向滚动条；
+   把截断关在值自己身上，复制走的仍是完整文本。 */
+.facts .kv-value {
+  white-space: nowrap;
+  word-break: normal;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 0.84rem;
+}
+
+.facts .kv .copy {
+  padding: 3px 8px;
+  font-size: 0.66rem;
+}
+
+/* 回读校验那行的值是「日期时间 + 时区 ID」两段：日期时间定宽不缩，
+   ID 塞不下时由 JS 打上 .no-zone 整条收掉（省略号咬半截 ID 比不写更难读）。 */
+#wall-echo {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  overflow: hidden;
+}
+
+#wall-echo .dt,
+#wall-echo .tz {
+  flex: none;
+}
+
+#wall-echo .tz {
+  color: var(--muted);
+  font-weight: 400;
+}
+
+#wall-echo.no-zone .tz {
+  display: none;
+}
+
+/* 主结果行「日期时间」与 .facts 各行同规格：同样标签宽、内边距、字号和复制按钮，
+   值仍拆成「核心 + 星期」两段——核心那串永不缺角，星期在挤不下时先收。 */
+#ts-main-row {
+  gap: 8px;
+  padding: 7px 10px;
+}
+
+#ts-main-row .kv-label {
+  width: 76px;
+  flex: none;
+  font-size: 0.66rem;
+  letter-spacing: 0.6px;
+  text-align: right;
+}
+
+#ts-main-row .kv-value {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 0.84rem;
+  white-space: nowrap;
+  word-break: normal;
+  overflow: hidden;
+}
+
+#ts-main-row .copy {
+  flex: none;
+  padding: 3px 8px;
+  font-size: 0.66rem;
+}
+
+#ts-main-row .kv-value .dt {
+  flex: none;
+  font-weight: inherit;
+  color: inherit;
+}
+
+#ts-main-row .kv-value .wk {
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--muted);
+  font-weight: 400;
+}
+
+/* 说明文字为空时不要留下空的段落高度。 */
+.note:empty {
+  display: none;
+}
+
+/* 手机宽度上一行放不下「标签 + 完整值」，让标签先占一行，值拿到整行宽度再折。
+   主结果行 #ts-main-row 不在 .facts 里，但同样吃这条规则，否则日期时间会被省略号截掉。 */
+@media (max-width: 560px) {
+  .facts .kv,
+  #ts-main-row {
+    flex-wrap: wrap;
+  }
+
+  .facts .kv-label,
+  #ts-main-row .kv-label {
+    width: 100%;
+    text-align: left;
+  }
+
+  .facts .kv-value {
+    white-space: normal;
+    word-break: break-all;
+  }
+
+  #ts-main-row .kv-value {
+    flex-wrap: wrap;
+    white-space: normal;
+    overflow: visible;
+    text-overflow: clip;
+  }
+
+  #ts-main-row .kv-value .wk {
+    overflow: visible;
+    text-overflow: clip;
+  }
+
+  /* 这一档标签本来就独占一行，回读校验的「日期时间 / 时区 ID」让它俩各自一行，
+     比省掉 ID 更实在，也就不必再走 .no-zone 那条路。 */
+  #wall-echo {
+    flex-wrap: wrap;
+  }
+}
+
+/* 基准栏完全固定在视口内（position: fixed），滚到页面底部也不挪动，栏内装不下时自己滚。
+   right 用 % 对齐 .wrap 的右缘：百分比相对固定定位的包含块（可视视口，不含滚动条），
+   与 body 里 .wrap 的居中基准一致，滚动条出现 / 消失都不会错位。 */
+.ts-rail {
+  position: fixed;
+  top: calc(var(--hang-h) + 18px);
+  right: max(16px, calc((100% - var(--content-max)) / 2));
+  width: var(--rail-w);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-height: calc(100vh - var(--hang-h) - 18px - 14px);
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+
+.rail-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.rail-head h2 {
+  font-size: 1rem;
+  font-weight: 640;
+  letter-spacing: 0.3px;
+}
+
+.rail-head .hint {
+  font-size: 0.74rem;
+  color: var(--muted);
+}
+
+#base-groups {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.bg {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 14px 14px 12px;
+}
+
+.bg-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  row-gap: 4px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+
+.bg-head-r {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-left: auto;
+}
+
+/* 「回到最近」钉在卡片右上角：文字链接样式，未手动改过时置灰不可点。 */
+.bg-recent {
+  background: none;
+  border: 0;
+  padding: 0;
+  font-family: inherit;
+  font-size: 0.72rem;
+  letter-spacing: 0.5px;
+  color: var(--accent);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.bg-recent:hover {
+  text-decoration: underline;
+}
+
+.bg-recent:disabled {
+  color: var(--done);
+  cursor: default;
+  text-decoration: none;
+}
+
+.bg-head h3 {
+  font-size: 0.88rem;
+  font-weight: 640;
+}
+
+.bg-head h3 small {
+  font-weight: 400;
+  font-size: 0.72rem;
+  color: var(--muted);
+  margin-left: 6px;
+}
+
+.bg-tag {
+  font-size: 0.68rem;
+  letter-spacing: 0.4px;
+  color: var(--muted);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 1px 8px;
+  white-space: nowrap;
+}
+
+.bg-tag.auto {
+  color: var(--accent-2);
+  border-color: var(--accent-2);
+}
+
+.bg-pick {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+/* 年月组三个下拉框并排一行：年份 / 月份按各自最长选项占宽，
+   剩下的整行宽度都给「该月」——它的选项（第 N 周周一）最长。 */
+.bg-pick.cols-3 {
+  grid-template-columns: auto auto minmax(0, 1fr);
+}
+
+/* 基准栏的下拉框去掉共用样式画的倒三角——点开原生列表本身就能选，
+   右侧改成一列上下三角，点一下就在这列选项里上移 / 下移一项。 */
+.bg-pick select {
+  font-size: 0.88rem;
+  padding: 8px 26px 8px 10px;
+  background-image: none;
+}
+
+.sel {
+  position: relative;
+  display: flex;
+}
+
+.sel-step {
+  position: absolute;
+  top: 1px;
+  right: 1px;
+  bottom: 1px;
+  width: 20px;
+  display: flex;
+  flex-direction: column;
+  border-left: 1px solid var(--border);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  overflow: hidden;
+}
+
+.step {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 0;
+  background: var(--panel);
+  color: var(--muted);
+  cursor: pointer;
+  transition: color 0.15s ease, background 0.15s ease;
+}
+
+.step + .step {
+  border-top: 1px solid var(--border);
+}
+
+.step::before {
+  content: "";
+  width: 0;
+  height: 0;
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+}
+
+.step[data-step="-1"]::before {
+  border-bottom: 5px solid currentColor;
+}
+
+.step[data-step="1"]::before {
+  border-top: 5px solid currentColor;
+}
+
+.step:hover:not(:disabled) {
+  color: var(--accent);
+  background: var(--accent-dim);
+}
+
+/* 到顶 / 到底就把那个方向的三角按住，免得点了没反应像是坏了。 */
+.step:disabled {
+  color: var(--done);
+  cursor: default;
+}
+
+.bg-out {
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 10px 12px;
+}
+
+.bg-secrow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.bg-sec {
+  font-family: "Cascadia Mono", "JetBrains Mono", Consolas, monospace;
+  font-size: 1.16rem;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  color: var(--accent-2);
+  font-variant-numeric: tabular-nums;
+  word-break: break-all;
+}
+
+.bg-secrow .copy {
+  flex: none;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--muted);
+  padding: 3px 10px;
+  font-size: 0.7rem;
+  cursor: pointer;
+  transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
+}
+
+.bg-secrow .copy:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--accent-dim);
+}
+
+.bg-secrow .copy.ok {
+  border-color: var(--success);
+  color: var(--success);
+}
+
+.bg-line {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 0.76rem;
+  color: var(--muted);
+  padding: 2px 0;
+}
+
+.bg-line b {
+  font-weight: 500;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+  word-break: break-all;
+  text-align: right;
+}
+
+.bg-warn {
+  margin-top: 8px;
+  font-size: 0.72rem;
+  line-height: 1.5;
+}
+
+.rail-note {
+  font-size: 0.72rem;
+  line-height: 1.7;
+  color: var(--muted);
+  padding: 0 2px;
+}
+
+.rail-note b {
+  color: var(--accent-2);
+  font-weight: 600;
+}
+
+/* 窄屏放不下并排两栏，基准栏退回正文下方。 */
+@media (max-width: 1120px) {
+  .ts-cols {
+    grid-template-columns: minmax(0, 1fr);
+    margin-top: 0;
+  }
+
+  .ts-rail {
+    position: static;
+    right: auto;
+    width: auto;
+    margin-top: 0;
+    max-height: none;
+    overflow-y: visible;
+  }
+
+  /* 堆叠后卡片吃满整行，三列改回按比例分，别让「该月」一个人撑到几百像素。 */
+  .bg-pick.cols-3 {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1.4fr);
+  }
+}
+
+.empty-val {
+  color: var(--done);
+}
