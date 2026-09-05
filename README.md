@@ -15,13 +15,16 @@
 
 ```bash
 # 1) 直接双击 index.html（file:// 打开，功能完整）
-#    站内链接都写成 tools/<slug>/index.html（带文件名），首页卡片点一次就进工具，
+#    首页卡片此时指向 tools/<slug>/index.html（带文件名），
 #    不会停在 file:// 的目录列表上让你再点一次。
 
 # 2) 起一个本地静态服务（推荐，剪贴板走原生 API）
 python -m http.server 8848 --bind 127.0.0.1
 # 浏览器打开 http://127.0.0.1:8848/
 ```
+
+> 服务器部署时用短地址（`/<slug>/`），`assets/js/registry.js` 会按协议自动选择：
+> `file://` 下用 `tools/<slug>/index.html`，http(s) 下用 `/<slug>/`。
 
 没有 `npm install`，没有打包步骤，改完刷新即可。
 
@@ -31,11 +34,11 @@ python -m http.server 8848 --bind 127.0.0.1
 反代、PHP 或任何后端**，也不需要 SPA 那条 `try_files ... /index.html` 兜底（所有 URL 都对应真实文件）。
 
 ```bash
-# 1) 放代码（git clone / rsync / scp 都行）
-sudo mkdir -p /var/www/zack-tools
-sudo rsync -a --delete zack-tools/ /var/www/zack-tools/
-# RHEL/CentOS 用 nginx:nginx，Debian/Ubuntu 用 www-data:www-data
-sudo chown -R nginx:nginx /var/www/zack-tools
+# 1) 放代码：clone 到 /opt 下，用 git pull 即可更新
+sudo git clone git@github.com:OnlyMyRem/zack-tools.git /opt/zack-tools
+# 更新版本：cd /opt/zack-tools && sudo git pull
+# 让 nginx 进程能读这些文件（RHEL/CentOS 用 nginx:nginx，Debian/Ubuntu 用 www-data:www-data）
+sudo chown -R nginx:nginx /opt/zack-tools
 ```
 
 ```nginx
@@ -45,9 +48,16 @@ server {
     listen      [::]:80;
     server_name tools.example.com;      # 没有域名就写 _
 
-    root        /var/www/zack-tools;
+    root        /opt/zack-tools;
     index       index.html;             # /tools/timestamp/ 这类目录 URL 由它命中 index.html
     charset     utf-8;                  # 界面是中文，缺这行时某些 locale 下会给成 latin-1
+
+    # 短地址：/<slug>/ 直达工具（首页卡片也指向这种短链接）。
+    # 每加一个工具就补一行映射；/<slug> 无尾斜杠时先 302 到 /<slug>/。
+    location = /timestamp { return 302 /timestamp/; }
+    location ^~ /timestamp/ { alias /opt/zack-tools/tools/timestamp/; index index.html; }
+    location = /cron { return 302 /cron/; }
+    location ^~ /cron/ { alias /opt/zack-tools/tools/cron/; index index.html; }
 
     # 真实文件优先：目录 → index.html，找不到就是 404，不兜到首页
     location / {
@@ -73,9 +83,9 @@ sudo nginx -t && sudo systemctl reload nginx     # -t 先校验，配置写错�
 sudo certbot --nginx -d tools.example.com
 ```
 
-- 首页 `/`、工具页 `/tools/timestamp/` 与 `/tools/timestamp/index.html` 三种写法都能直达。
+- 首页 `/`、工具短地址 `/timestamp/`、完整 `/tools/timestamp/` 与 `/tools/timestamp/index.html` 都能直达。
 - SELinux 机型（RHEL/CentOS）上把站点放在非默认目录要补一句上下文：
-  `sudo semanage fcontext -a -t httpd_sys_content_t '/var/www/zack-tools(/.*)?' && sudo restorecon -Rv /var/www/zack-tools`，
+  `sudo semanage fcontext -a -t httpd_sys_content_t '/opt/zack-tools(/.*)?' && sudo restorecon -Rv /opt/zack-tools`，
   否则 nginx 会报 `Permission denied`。
 - 只想临时分享给同事、不想要 nginx：在仓库根跑 `python -m http.server 8848 --bind 0.0.0.0` 就够，
   但那没有 HTTPS，剪贴板会走 `execCommand` 回退。
@@ -122,7 +132,9 @@ zack-tools/
 2. 在 `assets/js/registry.js` 的 `TOOLS` 数组追加一条
    `{ slug, name, icon, tags, summary }`。
 
-首页卡片、顶栏返回、面包屑都会自动出现，不需要改第二处；首页卡片链接的正是 `tools/<slug>/index.html`。
+首页卡片、顶栏返回、面包屑都会自动出现，不需要改第二处；不再有按钮或文案样板可删。
+首页卡片在服务器上用短地址 `/<slug>/`，`file://` 下退回 `tools/<slug>/index.html`，
+但 nginx 里的 `location` 短地址映射需要手动补一行（见「部署到服务器」），否则短地址 404。
 
 ## 功能一览
 

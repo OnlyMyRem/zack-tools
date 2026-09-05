@@ -8,6 +8,14 @@
   var page = document.body.dataset.page || "home";
   var tool = window.ztFindTool ? window.ztFindTool(page) : null;
 
+  // 返回首页的链接：部署在站点根时用绝对根路径，这样工具页无论以
+  // 长地址（/tools/<slug>/index.html）还是短地址（/<slug>/）访问，
+  // 顶栏品牌与面包屑「全部工具」都能稳定回到根目录首页。
+  function homeHref() {
+    if (root === "./" || root === "." || root === "" || root === "/") return "/index.html";
+    return root + "index.html";
+  }
+
   function el(html) {
     var t = document.createElement("template");
     t.innerHTML = html.trim();
@@ -16,7 +24,7 @@
 
   var bar = el(
     '<header class="hang-bar">' +
-      '<a class="brand" href="' + root + 'index.html"><span class="mark">&#9678;</span> Zack Tools</a>' +
+      '<a class="brand" href="' + homeHref() + '"><span class="mark">&#9678;</span> Zack Tools</a>' +
       '<nav class="top-bar-actions">' +
         '<select id="theme-select" class="theme-select" aria-label="选择主题">' +
           '<option value="system">跟随系统</option>' +
@@ -34,7 +42,7 @@
     var main = document.querySelector("main.wrap");
     if (main) {
       main.insertBefore(
-        el('<div class="crumb"><a href="' + root + 'index.html">全部工具</a><span>/</span><h1 class="crumb-cur">' + tool.name + "</h1></div>"),
+        el('<div class="crumb"><a href="' + homeHref() + '">全部工具</a><span>/</span><h1 class="crumb-cur">' + tool.name + "</h1></div>"),
         main.firstChild
       );
     }

@@ -36,7 +36,12 @@
   window.ZT_TOOLS = TOOLS;
 
   window.ztToolHref = function (slug) {
-    return window.ZT_ROOT + "tools/" + slug + "/index.html";
+    // 服务器部署用短地址（/<slug>/），地址栏更干净；file:// 直接打开时退回
+    // 带 index.html 的相对路径，避免落到目录列表还得再点一次。
+    if (window.location && window.location.protocol === "file:") {
+      return window.ZT_ROOT + "tools/" + slug + "/index.html";
+    }
+    return window.ZT_ROOT + slug + "/";
   };
 
   window.ztFindTool = function (slug) {
